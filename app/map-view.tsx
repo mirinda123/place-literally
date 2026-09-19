@@ -4,7 +4,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import {Globe2, MapPinned} from 'lucide-react';
 import {Button} from '../components/ui/button';
 import {relationLabel} from '../lib/atlas';
-import {PLACE_SOURCE,PLACE_LAYER,placeLabelText,placeLabelOpacity,placeFeatures,pinImage,replaceBasemapLabels} from '../lib/map-symbols';
+import {PLACE_SOURCE,PLACE_LAYER,placeLabelText,placeIconImage,placeSymbolOpacity,placeFeatures,pinImage,replaceBasemapLabels} from '../lib/map-symbols';
 import {useEffect,useRef,useState} from 'react';
 import type {AtlasRecord} from '../lib/atlas';
 import type {Map as MapType,StyleSpecification,GeoJSONSource} from 'maplibre-gl';
@@ -47,16 +47,16 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
     instance.addSource('connections',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
     // Keep semantic links below street/place labels.
     const firstLabel=instance.getStyle().layers.find(layer=>layer.type==='symbol')?.id;
-    instance.addLayer({id:'connections',type:'line',source:'connections',paint:{'line-color':'#315bc9','line-width':2,'line-opacity':0.75,'line-dasharray':[3,3]}},firstLabel);
+    instance.addLayer({id:'connections',type:'line',source:'connections',paint:{'line-color':'#315bc9','line-width':2,'line-opacity':['interpolate',['linear'],['zoom'],0,0.75,12,0.75,14,0],'line-dasharray':[3,3]}},firstLabel);
     instance.addSource(PLACE_SOURCE,{type:'geojson',data:{type:'FeatureCollection',features:[]},maxzoom:18});
     for(const [id,color,radius,halo] of [['atlas-other','#95a6b3',4,false],['atlas-active','#4267c6',7,false],['atlas-near','#a5b9e8',7,false],['atlas-selected','#315bc9',9,true]] as const){instance.addImage(id,pinImage(color,radius,halo),{pixelRatio:2});}
-    instance.addLayer({id:PLACE_LAYER,type:'symbol',source:PLACE_SOURCE,layout:{
-     'icon-image':['get','icon'],'icon-allow-overlap':true,'text-optional':true,
+    instance.addLayer({id:PLACE_LAYER,type:'symbol',source:PLACE_SOURCE,maxzoom:14,layout:{
+     'icon-image':placeIconImage,'icon-allow-overlap':true,'text-optional':true,
      'symbol-sort-key':['get','priority'],'icon-padding':0,
      'text-field':placeLabelText,
      'text-font':['Noto Sans Regular'],'text-size':12,'text-anchor':'left','text-offset':[1.15,0],
      'text-max-width':12,'text-padding':4,'text-allow-overlap':false,
-    },paint:{'text-opacity':placeLabelOpacity,'text-color':['get','color'],'text-halo-color':'#ffffff','text-halo-width':2}});
+    },paint:{'icon-opacity':placeSymbolOpacity,'text-opacity':placeSymbolOpacity,'text-color':['get','color'],'text-halo-color':'#ffffff','text-halo-width':2}});
     instance.on('click',PLACE_LAYER,event=>{const id=event.features?.[0]?.properties?.analysis_id;if(typeof id==='string')callback.current(id);});
     instance.on('mouseenter',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='pointer';});
     instance.on('mouseleave',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='';});

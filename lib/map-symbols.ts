@@ -7,14 +7,16 @@ export const PLACE_SOURCE = 'atlas-places';
 export const PLACE_LAYER = 'atlas-place-symbols';
 
 // Zoom is evaluated by MapLibre, not by React on every animation frame.
-// Empty text also releases collision space once a label has completely faded.
-export const placeLabelText: ExpressionSpecification = ['step', ['zoom'],
- ['case', ['any', ['get', 'active'], ['get', 'country']], ['get', 'label'], ''],
- 2, ['get', 'label'],
- 7, ['case', ['get', 'country'], '', ['get', 'label']],
+// Empty content releases collision and hit-test geometry after fading.
+const zoomContent = (property: string): ExpressionSpecification => ['step', ['zoom'],
+ ['case', ['any', ['get', 'active'], ['get', 'country']], ['get', property], ''],
+ 2, ['get', property],
+ 7, ['case', ['get', 'country'], '', ['get', property]],
  14, '',
 ];
-export const placeLabelOpacity: ExpressionSpecification = ['interpolate', ['linear'], ['zoom'],
+export const placeLabelText = zoomContent('label');
+export const placeIconImage = zoomContent('icon');
+export const placeSymbolOpacity: ExpressionSpecification = ['interpolate', ['linear'], ['zoom'],
  0, ['case', ['any', ['get', 'active'], ['get', 'country']], 1, 0],
  2, ['case', ['any', ['get', 'active'], ['get', 'country']], 1, 0],
  3, 1,

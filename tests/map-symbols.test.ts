@@ -4,7 +4,7 @@ import {featureFilter, createPropertyExpression, v8} from '@maplibre/maplibre-gl
 import type {StyleSpecification, SymbolLayerSpecification} from 'maplibre-gl';
 import anchors from '../data/map-anchors.json';
 import {records} from '../lib/atlas';
-import {placeFeatures, replaceBasemapLabels, placeLabelText, placeLabelOpacity} from '../lib/map-symbols';
+import {placeFeatures, replaceBasemapLabels, placeLabelText, placeIconImage, placeSymbolOpacity} from '../lib/map-symbols';
 
 test('Nanjing uses the verified basemap label anchor, and ancient Carthage stays independent',()=>{
  const nanjing=records.find(r=>r.place.id==='nanjing-cn')!;
@@ -40,14 +40,21 @@ test('selection and grouping restyle symbols without moving their geometry or lo
  assert.equal(feature.properties?.label,'南京\nNanjing');
 });
 
-test('native zoom expressions fade labels at both ends and release hidden text without removing pins',()=>{
+test('native zoom expressions hide both text and icon at the same levels',()=>{
  const text=createPropertyExpression(placeLabelText,'text-field',v8.layout_symbol['text-field'] as unknown as Parameters<typeof createPropertyExpression>[2]);
- const opacity=createPropertyExpression(placeLabelOpacity,'text-opacity',v8.paint_symbol['text-opacity'] as unknown as Parameters<typeof createPropertyExpression>[2]);
+ const icon=createPropertyExpression(placeIconImage,'icon-image',v8.layout_symbol['icon-image'] as unknown as Parameters<typeof createPropertyExpression>[2]);
+ const iconOpacity=createPropertyExpression(placeSymbolOpacity,'icon-opacity',v8.paint_symbol['icon-opacity'] as unknown as Parameters<typeof createPropertyExpression>[2]);
+ const opacity=createPropertyExpression(placeSymbolOpacity,'text-opacity',v8.paint_symbol['text-opacity'] as unknown as Parameters<typeof createPropertyExpression>[2]);
+ assert.equal(icon.result,'success');assert.equal(iconOpacity.result,'success');
  assert.equal(text.result,'success');assert.equal(opacity.result,'success');
- if(text.result!=='success'||opacity.result!=='success')return;
+ if(text.result!=='success'||opacity.result!=='success'||icon.result!=='success'||iconOpacity.result!=='success')return;
  const label=(zoom:number,active=false,country=false)=>{
-  const feature={type:'Point' as const,properties:{active,country,label:'南京\nNanjing'}};
-  return {text:String(text.value.evaluate({zoom},feature)),opacity:opacity.value.evaluate({zoom},feature)};
+  const feature={type:'Point' as const,properties:{active,country,icon:'atlas-active',label:'南京\nNanjing'}};
+  const labelText=String(text.value.evaluate({zoom},feature));
+  const image=icon.value.evaluate({zoom},feature);
+  assert.equal(image?.name || '',labelText ? 'atlas-active' : '');
+  assert.equal(iconOpacity.value.evaluate({zoom},feature),opacity.value.evaluate({zoom},feature));
+  return {text:labelText,opacity:opacity.value.evaluate({zoom},feature)};
  };
  assert.deepEqual(label(1),{text:'',opacity:0});
  assert.equal(label(1,true).opacity,1);
