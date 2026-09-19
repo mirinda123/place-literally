@@ -128,12 +128,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          14.268,
-          40.852
+          14.24876868724823,
+          40.83588379874956
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 4283395581; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -172,12 +172,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          31.276,
-          58.522
+          31.27578556537628,
+          58.52098556249004
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 270175891; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -194,12 +194,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          20.448,
-          44.787
+          20.456897020339966,
+          44.81781356586578
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 605714931; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -216,12 +216,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          36.587,
-          50.599
+          36.587337255477905,
+          50.59555853434932
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 271190391; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -238,12 +238,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          126.978,
-          37.567
+          126.97829067707062,
+          37.56667863553625
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 19123656311; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -260,12 +260,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          135.768,
-          35.012
+          135.768141746521,
+          35.01157586000204
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 5336811391; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -282,12 +282,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          116.407,
-          39.904
+          116.39129519462585,
+          39.90571183235983
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 252486621; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -304,12 +304,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          118.797,
-          32.061
+          118.77886354923248,
+          32.04382775826305
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 2440813811; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -326,12 +326,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          139.692,
-          35.69
+          139.76389288902283,
+          35.6768599988893
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 2650186921; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -348,12 +348,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          104,
-          35
+          108.92370879650116,
+          34.541224669456525
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 4243135821; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null
@@ -370,12 +370,12 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -74.006,
-          40.713
+          -74.0060144662857,
+          40.71272785357016
         ]
       },
-      "coordinate_status": "approximate_demo",
-      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "coordinate_status": "basemap_label_anchor",
+      "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 617854511; see data/map-anchors.json for the dated tile and ODbL attribution.",
       "external_ids": {
         "wikidata": null,
         "geonames": null

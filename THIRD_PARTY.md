@@ -22,7 +22,7 @@ Wiktionary contributors, CC BY-SA 4.0: https://creativecommons.org/licenses/by-s
 
 Changes: extracted/condensed etymological accounts, Chinese/English glosses, normalized meanings, segmentation and editorial grouping. These are provisional adaptations awaiting review. Derivative etymology data must retain attribution and share-alike terms; the application MIT license does not override these terms.
 
-Coordinates are approximate manually entered demonstration points. No proprietary map tiles are bundled.
+The ancient Carthage coordinate remains a manually entered demonstration point. The other 11 coordinates and place-label bindings in `data/map-anchors.json` (also used by `data/seed.json`) are extracted from OpenFreeMap / OpenMapTiles place features, © OpenStreetMap contributors, under ODbL 1.0. Each binding records its dated tile URL, feature ID and verification date. These geographic fields retain their ODbL attribution separately from the CC BY-SA etymology content. No map tiles are bundled.
 
 ## Online street basemap
 

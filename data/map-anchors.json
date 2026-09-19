@@ -1,0 +1,217 @@
+[
+  {
+    "place_id": "naples-it",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 4283395581,
+    "class": "city",
+    "names": [
+      "Napoli",
+      "Naples",
+      "那不勒斯"
+    ],
+    "coordinates": [
+      14.24876868724823,
+      40.83588379874956
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/8840/6152.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "veliky-novgorod-ru",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 270175891,
+    "class": "city",
+    "names": [
+      "Великий Новгород",
+      "Veliky Novgorod",
+      "大诺夫哥罗德"
+    ],
+    "coordinates": [
+      31.27578556537628,
+      58.52098556249004
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/9615/4889.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "belgrade-rs",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 605714931,
+    "class": "city",
+    "names": [
+      "Београд",
+      "Belgrade",
+      "贝尔格莱德/貝爾格勒/貝爾格萊德"
+    ],
+    "coordinates": [
+      20.456897020339966,
+      44.81781356586578
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/9123/5905.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "belgorod-ru",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 271190391,
+    "class": "city",
+    "names": [
+      "Белгород",
+      "Belgorod",
+      "别尔哥罗德"
+    ],
+    "coordinates": [
+      36.587337255477905,
+      50.59555853434932
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/9857/5514.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "seoul-kr",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 19123656311,
+    "class": "city",
+    "names": [
+      "서울특별시",
+      "Seoul",
+      "首尔特别市"
+    ],
+    "coordinates": [
+      126.97829067707062,
+      37.56667863553625
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/13970/6344.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "kyoto-jp",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 5336811391,
+    "class": "city",
+    "names": [
+      "京都市",
+      "Kyoto"
+    ],
+    "coordinates": [
+      135.768141746521,
+      35.01157586000204
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/14370/6489.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "beijing-cn",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 252486621,
+    "class": "city",
+    "names": [
+      "北京市",
+      "Beijing"
+    ],
+    "coordinates": [
+      116.39129519462585,
+      39.90571183235983
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/13489/6208.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "nanjing-cn",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 2440813811,
+    "class": "city",
+    "names": [
+      "南京市",
+      "Nanjing"
+    ],
+    "coordinates": [
+      118.77886354923248,
+      32.04382775826305
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/13597/6651.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "tokyo-jp",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 2650186921,
+    "class": "city",
+    "names": [
+      "東京都",
+      "Tokyo",
+      "东京都/東京都"
+    ],
+    "coordinates": [
+      139.76389288902283,
+      35.6768599988893
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/14552/6451.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "china-cn",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 4243135821,
+    "class": "country",
+    "names": [
+      "中国",
+      "China"
+    ],
+    "coordinates": [
+      108.92370879650116,
+      34.541224669456525
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/13149/6515.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  },
+  {
+    "place_id": "new-york-us",
+    "source": "openmaptiles",
+    "source_layer": "place",
+    "feature_id": 617854511,
+    "class": "city",
+    "names": [
+      "New York",
+      "纽约;紐約"
+    ],
+    "coordinates": [
+      -74.0060144662857,
+      40.71272785357016
+    ],
+    "tile_url": "https://tiles.openfreemap.org/planet/20260913_164504_pt/14/4823/6160.pbf",
+    "verified_at": "2026-09-19",
+    "license": "ODbL-1.0",
+    "attribution": "OpenStreetMap contributors / OpenFreeMap / OpenMapTiles"
+  }
+]

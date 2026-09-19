@@ -4,16 +4,17 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import {Globe2, MapPinned} from 'lucide-react';
 import {Button} from '../components/ui/button';
 import {relationLabel} from '../lib/atlas';
+import {PLACE_SOURCE,PLACE_LAYER,placeFeatures,pinImage,replaceBasemapLabels} from '../lib/map-symbols';
 import {useEffect,useRef,useState} from 'react';
 import type {AtlasRecord} from '../lib/atlas';
-import type {Map as MapType,Marker as MarkerType,StyleSpecification,GeoJSONSource} from 'maplibre-gl';
+import type {Map as MapType,StyleSpecification,GeoJSONSource} from 'maplibre-gl';
 
 type Props={all:AtlasRecord[];visible:AtlasRecord[];selected:string|null;onSelect:(id:string)=>void;fit:number;lines:boolean};
 const STREET_STYLE='https://tiles.openfreemap.org/styles/liberty';
-const fallbackStyle:StyleSpecification={version:8,sources:{world:{type:'geojson',data:'/world.geojson',attribution:'<a href="https://www.naturalearthdata.com/about/terms-of-use/">Natural Earth</a>'}},layers:[{id:'sea',type:'background',paint:{'background-color':'#dcebf1'}},{id:'land',type:'fill',source:'world',paint:{'fill-color':'#f5f7ed'}},{id:'boundaries',type:'line',source:'world',paint:{'line-color':'#bac8ce','line-width':0.65}}]};
+const fallbackStyle:StyleSpecification={version:8,glyphs:'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',sources:{world:{type:'geojson',data:'/world.geojson',attribution:'<a href="https://www.naturalearthdata.com/about/terms-of-use/">Natural Earth</a>'}},layers:[{id:'sea',type:'background',paint:{'background-color':'#dcebf1'}},{id:'land',type:'fill',source:'world',paint:{'fill-color':'#f5f7ed'}},{id:'boundaries',type:'line',source:'world',paint:{'line-color':'#bac8ce','line-width':0.65}}]};
 
 export default function MapView({all,visible,selected,onSelect,fit,lines}:Props){
- const container=useRef<HTMLDivElement>(null),map=useRef<MapType|null>(null),markers=useRef<MarkerType[]>([]);
+ const container=useRef<HTMLDivElement>(null),map=useRef<MapType|null>(null);
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[offline,setOffline]=useState(false);
  const callback=useRef(onSelect);callback.current=onSelect;
  useEffect(()=>{
@@ -27,7 +28,7 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    try{
     const response=await fetch(STREET_STYLE,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(10000)])});
     if(!response.ok)throw Error('Street map unavailable');
-    style=await response.json() as StyleSpecification;
+    style=replaceBasemapLabels(await response.json() as StyleSpecification);
    }catch{if(disposed)return;setOffline(true);}
    if(disposed||!container.current)return;
    lib.setWorkerUrl(workerUrl);
@@ -37,7 +38,7 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    resizeObserver=new ResizeObserver(()=>instance.resize());
    resizeObserver.observe(container.current);
    instance.addControl(new lib.NavigationControl({showCompass:false}),'top-right');
-   instance.addControl(new lib.AttributionControl({compact:true,customAttribution:'词源图钉为近似位置'}),'bottom-right');
+   instance.addControl(new lib.AttributionControl({compact:true,customAttribution:'词源地点：底图地名锚点；古城为近似位置'}),'bottom-right');
    instance.addControl(new lib.ScaleControl({maxWidth:100,unit:'metric'}),'bottom-left');
    instance.on('style.load',()=>{
     if(disposed)return;
@@ -47,37 +48,33 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
     // Keep semantic links below street/place labels.
     const firstLabel=instance.getStyle().layers.find(layer=>layer.type==='symbol')?.id;
     instance.addLayer({id:'connections',type:'line',source:'connections',paint:{'line-color':'#315bc9','line-width':2,'line-opacity':0.75,'line-dasharray':[3,3]}},firstLabel);
+    instance.addSource(PLACE_SOURCE,{type:'geojson',data:{type:'FeatureCollection',features:[]},maxzoom:18});
+    for(const [id,color,radius,halo] of [['atlas-other','#95a6b3',4,false],['atlas-active','#4267c6',7,false],['atlas-near','#a5b9e8',7,false],['atlas-selected','#315bc9',9,true]] as const){instance.addImage(id,pinImage(color,radius,halo),{pixelRatio:2});}
+    instance.addLayer({id:PLACE_LAYER,type:'symbol',source:PLACE_SOURCE,layout:{
+     'icon-image':['get','icon'],'icon-allow-overlap':true,'text-optional':true,
+     'symbol-sort-key':['get','priority'],'icon-padding':0,
+     'text-field':['step',['zoom'],['case',['any',['get','active'],['get','country']],['get','label'],''],3,['get','label']],
+     'text-font':['Noto Sans Regular'],'text-size':12,'text-anchor':'left','text-offset':[1.15,0],
+     'text-max-width':12,'text-padding':4,'text-allow-overlap':false,
+    },paint:{'text-color':['get','color'],'text-halo-color':'#ffffff','text-halo-width':2}});
+    instance.on('click',PLACE_LAYER,event=>{const id=event.features?.[0]?.properties?.analysis_id;if(typeof id==='string')callback.current(id);});
+    instance.on('mouseenter',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='pointer';});
+    instance.on('mouseleave',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='';});
     setReady(true);
    });
    instance.on('load',()=>{if(!disposed){clearTimeout(timeout);setFailed(false);}});
    instance.on('error',()=>{if(!disposed)setFailed(true);});
   }
   initialize().catch(()=>{if(!disposed)setFailed(true);});
-  return()=>{disposed=true;resizeObserver?.disconnect();controller.abort();clearTimeout(timeout);markers.current.forEach(m=>m.remove());map.current?.remove();map.current=null;};
+  return()=>{disposed=true;resizeObserver?.disconnect();controller.abort();clearTimeout(timeout);map.current?.remove();map.current=null;};
  },[]);
 
  useEffect(()=>{
   if(!ready||!map.current)return;
-  let cancelled=false;
-  import('maplibre-gl').then(lib=>{
-   if(cancelled||!map.current)return;
-   markers.current.forEach(m=>m.remove());
-   const ids=new Set(visible.map(r=>r.id));
-   markers.current=all.map(record=>{
-    const active=ids.has(record.id),chosen=record.id===selected;
-    const el=document.createElement('button');el.type='button';el.className=`map-marker ${active?'is-related':''} ${chosen?'is-selected':''}`;
-    if(active&&selected){const origin=all.find(r=>r.id===selected);if(origin&&relationLabel(origin,record)!=='同义归一'&&!chosen)el.classList.add('is-near');}
-    el.setAttribute('aria-label',`${record.place.display_name.zh} · ${record.place.display_name.en}`);el.setAttribute('aria-pressed',String(chosen));
-    const dot=document.createElement('span');dot.className='marker-pin';el.appendChild(dot);
-    if(active){const label=document.createElement('span');label.className='marker-label';if(record.place.id==='carthage-ancient-tn')label.classList.add('label-below');label.textContent=record.place.display_name.en;el.appendChild(label);}
-    el.addEventListener('click',e=>{e.stopPropagation();callback.current(record.id);});
-    return new lib.Marker({element:el,anchor:'center',opacityWhenCovered:0}).setLngLat(record.place.geometry.coordinates as [number,number]).addTo(map.current!);
-   });
-   const origin=all.find(r=>r.id===selected);
-   const features=lines&&origin?visible.filter(r=>r.id!==selected).map(r=>greatCircle(origin.place.geometry.coordinates,r.place.geometry.coordinates,{npoints:64,properties:{relation:relationLabel(origin,r)}})):[];
-   (map.current.getSource('connections') as GeoJSONSource)?.setData({type:'FeatureCollection',features});
-  });
-  return()=>{cancelled=true;};
+  (map.current.getSource(PLACE_SOURCE) as GeoJSONSource)?.setData(placeFeatures(all,visible,selected));
+  const origin=all.find(r=>r.id===selected);
+  const features=lines&&origin?visible.filter(r=>r.id!==selected).map(r=>greatCircle(origin.place.geometry.coordinates,r.place.geometry.coordinates,{npoints:64,properties:{relation:relationLabel(origin,r)}})):[];
+  (map.current.getSource('connections') as GeoJSONSource)?.setData({type:'FeatureCollection',features});
  },[ready,all,visible,selected,lines]);
 
  function duration(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:900;}
@@ -90,6 +87,7 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
  },[fit,ready]);
  return <>
   <div ref={container} className="map-canvas" aria-label="可拖动和缩放的世界地名地图"/>
+  <nav className="map-keyboard-places" aria-label="地图地点，键盘选择"><span>地图上的地点</span>{all.map(record=><Button key={record.id} variant="ghost" aria-pressed={selected===record.id} onClick={()=>onSelect(record.id)}>{record.place.display_name.zh} · {record.place.display_name.en}</Button>)}</nav>
   <div className="map-view-actions"><Button variant="ghost" disabled={!ready} onClick={showGlobe} aria-label="缩小到地球" title="缩小到地球"><Globe2 size={18}/></Button><Button variant="ghost" disabled={!ready||!selected||offline} onClick={showStreets} aria-label="放大到所选地点街区" title="放大到所选地点街区"><MapPinned size={18}/></Button></div>
   {(failed||offline)&&<div className="map-load-notice" role="status">{offline?'街道底图连接失败，暂时显示简化地球。刷新可重试。':'部分地图资源暂时无法加载，请检查网络后刷新。'}</div>}
  </>;
