@@ -18,6 +18,7 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
  const callback=useRef(onSelect);callback.current=onSelect;
  useEffect(()=>{
   let disposed=false;
+  let resizeObserver:ResizeObserver|undefined;
   const controller=new AbortController();
   const timeout=setTimeout(()=>{if(!disposed)setFailed(true);},25000);
   async function initialize(){
@@ -32,6 +33,9 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    lib.setWorkerUrl(workerUrl);
    const instance=new lib.Map({container:container.current,center:[35,25],zoom:Math.max(0,Math.min(1.5,Math.log2(Math.min(container.current.clientWidth-40,container.current.clientHeight-180)/180))),minZoom:0,maxZoom:20,renderWorldCopies:false,attributionControl:false,canvasContextAttributes:{antialias:true},style});
    map.current=instance;
+   // Sidebar transitions resize the container without a window resize event.
+   resizeObserver=new ResizeObserver(()=>instance.resize());
+   resizeObserver.observe(container.current);
    instance.addControl(new lib.NavigationControl({showCompass:false}),'top-right');
    instance.addControl(new lib.AttributionControl({compact:true,customAttribution:'词源图钉为近似位置'}),'bottom-right');
    instance.addControl(new lib.ScaleControl({maxWidth:100,unit:'metric'}),'bottom-left');
@@ -49,7 +53,7 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    instance.on('error',()=>{if(!disposed)setFailed(true);});
   }
   initialize().catch(()=>{if(!disposed)setFailed(true);});
-  return()=>{disposed=true;controller.abort();clearTimeout(timeout);markers.current.forEach(m=>m.remove());map.current?.remove();map.current=null;};
+  return()=>{disposed=true;resizeObserver?.disconnect();controller.abort();clearTimeout(timeout);markers.current.forEach(m=>m.remove());map.current?.remove();map.current=null;};
  },[]);
 
  useEffect(()=>{
