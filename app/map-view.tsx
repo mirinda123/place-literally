@@ -4,7 +4,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import {Globe2, MapPinned} from 'lucide-react';
 import {Button} from '../components/ui/button';
 import {relationLabel} from '../lib/atlas';
-import {PLACE_SOURCE,PLACE_LAYER,placeFeatures,pinImage,replaceBasemapLabels} from '../lib/map-symbols';
+import {PLACE_SOURCE,PLACE_LAYER,placeLabelText,placeLabelOpacity,placeFeatures,pinImage,replaceBasemapLabels} from '../lib/map-symbols';
 import {useEffect,useRef,useState} from 'react';
 import type {AtlasRecord} from '../lib/atlas';
 import type {Map as MapType,StyleSpecification,GeoJSONSource} from 'maplibre-gl';
@@ -53,10 +53,10 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
     instance.addLayer({id:PLACE_LAYER,type:'symbol',source:PLACE_SOURCE,layout:{
      'icon-image':['get','icon'],'icon-allow-overlap':true,'text-optional':true,
      'symbol-sort-key':['get','priority'],'icon-padding':0,
-     'text-field':['step',['zoom'],['case',['any',['get','active'],['get','country']],['get','label'],''],3,['get','label']],
+     'text-field':placeLabelText,
      'text-font':['Noto Sans Regular'],'text-size':12,'text-anchor':'left','text-offset':[1.15,0],
      'text-max-width':12,'text-padding':4,'text-allow-overlap':false,
-    },paint:{'text-color':['get','color'],'text-halo-color':'#ffffff','text-halo-width':2}});
+    },paint:{'text-opacity':placeLabelOpacity,'text-color':['get','color'],'text-halo-color':'#ffffff','text-halo-width':2}});
     instance.on('click',PLACE_LAYER,event=>{const id=event.features?.[0]?.properties?.analysis_id;if(typeof id==='string')callback.current(id);});
     instance.on('mouseenter',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='pointer';});
     instance.on('mouseleave',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='';});

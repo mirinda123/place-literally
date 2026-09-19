@@ -1,10 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
+import {featureFilter, createPropertyExpression, v8} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleSpecification, SymbolLayerSpecification} from 'maplibre-gl';
 import anchors from '../data/map-anchors.json';
 import {records} from '../lib/atlas';
-import {placeFeatures, replaceBasemapLabels} from '../lib/map-symbols';
+import {placeFeatures, replaceBasemapLabels, placeLabelText, placeLabelOpacity} from '../lib/map-symbols';
 
 test('Nanjing uses the verified basemap label anchor, and ancient Carthage stays independent',()=>{
  const nanjing=records.find(r=>r.place.id==='nanjing-cn')!;
@@ -38,4 +38,26 @@ test('selection and grouping restyle symbols without moving their geometry or lo
  assert.equal(feature.properties?.analysis_id,origin.id);
  assert.equal(feature.properties?.icon,'atlas-selected');
  assert.equal(feature.properties?.label,'南京\nNanjing');
+});
+
+test('native zoom expressions fade labels at both ends and release hidden text without removing pins',()=>{
+ const text=createPropertyExpression(placeLabelText,'text-field',v8.layout_symbol['text-field'] as unknown as Parameters<typeof createPropertyExpression>[2]);
+ const opacity=createPropertyExpression(placeLabelOpacity,'text-opacity',v8.paint_symbol['text-opacity'] as unknown as Parameters<typeof createPropertyExpression>[2]);
+ assert.equal(text.result,'success');assert.equal(opacity.result,'success');
+ if(text.result!=='success'||opacity.result!=='success')return;
+ const label=(zoom:number,active=false,country=false)=>{
+  const feature={type:'Point' as const,properties:{active,country,label:'南京\nNanjing'}};
+  return {text:String(text.value.evaluate({zoom},feature)),opacity:opacity.value.evaluate({zoom},feature)};
+ };
+ assert.deepEqual(label(1),{text:'',opacity:0});
+ assert.equal(label(1,true).opacity,1);
+ assert.equal(label(2.5).opacity,0.5);
+ assert.equal(label(6.5,false,true).opacity,0.5);
+ assert.deepEqual(label(7,false,true),{text:'',opacity:0});
+ assert.equal(label(8).text,'南京\nNanjing');
+ assert.equal(label(13,true).opacity,0.5);
+ assert.deepEqual(label(14,true),{text:'',opacity:0});
+ assert.deepEqual(label(20,true),{text:'',opacity:0});
+ const nanjing=records.find(r=>r.place.id==='nanjing-cn')!;
+ assert.equal(placeFeatures(records,[nanjing],nanjing.id).features.find(f=>f.id===nanjing.id)?.properties?.icon,'atlas-selected');
 });

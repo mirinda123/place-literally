@@ -1,10 +1,28 @@
 import type {FeatureCollection, Point} from 'geojson';
-import type {StyleSpecification, FilterSpecification} from 'maplibre-gl';
+import type {StyleSpecification, FilterSpecification, ExpressionSpecification} from 'maplibre-gl';
 import anchors from '../data/map-anchors.json';
 import {relationLabel, type AtlasRecord} from './atlas';
 
 export const PLACE_SOURCE = 'atlas-places';
 export const PLACE_LAYER = 'atlas-place-symbols';
+
+// Zoom is evaluated by MapLibre, not by React on every animation frame.
+// Empty text also releases collision space once a label has completely faded.
+export const placeLabelText: ExpressionSpecification = ['step', ['zoom'],
+ ['case', ['any', ['get', 'active'], ['get', 'country']], ['get', 'label'], ''],
+ 2, ['get', 'label'],
+ 7, ['case', ['get', 'country'], '', ['get', 'label']],
+ 14, '',
+];
+export const placeLabelOpacity: ExpressionSpecification = ['interpolate', ['linear'], ['zoom'],
+ 0, ['case', ['any', ['get', 'active'], ['get', 'country']], 1, 0],
+ 2, ['case', ['any', ['get', 'active'], ['get', 'country']], 1, 0],
+ 3, 1,
+ 6, 1,
+ 7, ['case', ['get', 'country'], 0, 1],
+ 12, ['case', ['get', 'country'], 0, 1],
+ 14, 0,
+];
 
 // Feature IDs identify the verified objects, not every place sharing their names.
 export function replaceBasemapLabels(style: StyleSpecification): StyleSpecification {
