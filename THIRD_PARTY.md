@@ -23,3 +23,11 @@ Wiktionary contributors, CC BY-SA 4.0: https://creativecommons.org/licenses/by-s
 Changes: extracted/condensed etymological accounts, Chinese/English glosses, normalized meanings, segmentation and editorial grouping. These are provisional adaptations awaiting review. Derivative etymology data must retain attribution and share-alike terms; the application MIT license does not override these terms.
 
 Coordinates are approximate manually entered demonstration points. No proprietary map tiles are bundled.
+
+## Online street basemap
+
+OpenFreeMap public tiles: https://openfreemap.org/quick_start/
+OpenMapTiles schema/style attribution: https://openmaptiles.org/
+Map data © OpenStreetMap contributors, ODbL: https://www.openstreetmap.org/copyright
+
+MapLibre's attribution control displays the online sources' attribution. Tiles, fonts and sprites load from OpenFreeMap on demand and are not redistributed in this repository. Street-level detail depends on OpenStreetMap coverage; the etymology dataset remains a separate curated layer.

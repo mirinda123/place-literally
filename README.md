@@ -43,7 +43,7 @@ npm run dev
 
 ## 技术与部署
 
-React + TypeScript，基于 Vinext/Vite 的应用与服务端路由；随项目打包 Natural Earth 底图，无地图服务 API key。当前托管配置在 `.openai/hosting.json`，环境密钥不入库。若自行部署到其他平台，需适配 Vinext 的 Worker 运行环境或迁移路由。
+React + TypeScript，基于 Vinext/Vite 的应用与服务端路由；使用 OpenFreeMap / OpenStreetMap 在线街道底图，无需地图服务 API key；需要联网，细节取决于 OSM 覆盖。Natural Earth 随项目打包作为简化备用底图。当前托管配置在 `.openai/hosting.json`，环境密钥不入库。若自行部署到其他平台，需适配 Vinext 的 Worker 运行环境或迁移路由。
 
 ## 贡献
 

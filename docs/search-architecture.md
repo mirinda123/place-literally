@@ -4,7 +4,7 @@
 
 ## 当前实现
 
-- 地图：MapLibre GL JS；地理连线：Turf great-circle；底图：Natural Earth 的真实地理数据，随项目发布。
+- 地图：MapLibre GL JS；地理连线：Turf great-circle；底图：OpenFreeMap / OpenStreetMap 的在线矢量瓦片；缩小显示地球，放大到道路与建筑。Natural Earth 仅作断网时的简化备用底图。
 - UI：项目现有的 shadcn/ui（Radix primitives）Button、Input、ToggleGroup、Dialog，Lucide 图标。没有自制地图引擎、弹窗焦点管理或分段选择键盘逻辑。
 - `/api/search`：Fuse.js 名称/别名/转写模糊匹配 + 中英语义概念与人工关系图谱。支持“新的定居点”“跟首都有关系的名字”“中心”等表达；不是已接通的大模型，也不理解任意句子。
 - 后端存储为随应用发布的版本化 JSON；没有安装数据库。12 个地点的种子包含来源和审核标记。
