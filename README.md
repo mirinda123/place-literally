@@ -1,0 +1,52 @@
+# Literal Name Map
+
+**The world has fewer names than you think.**
+
+一个按字面含义探索地名的开源地图原型。点击 Naples，可以看见同样意为“新城”的 Carthage 和 Novgorod；切换“相近”与“主题”，探索更宽的联系。
+
+## 本地运行
+
+需要 Node.js >= 22.13。项目当前位于 `D:\Projects\literal-name-map`。
+
+```sh
+npm ci
+npm run dev
+```
+
+打开终端输出的地址，默认 http://localhost:5173。`npm test` 检查搜索和归一规则；`npm run build` 构建应用。
+
+## 已实现
+
+- MapLibre GL JS 世界地图、关联图钉、Turf 大圆连线、视野适配。
+- shadcn/ui + Radix 的按钮、输入、范围选择、数据说明弹窗，Lucide 图标。
+- 特定名称的词源卡、拆词、来源链接和待复核标记。
+- 同义 / 相近 / 共同主题三个层次；宽主题不画同义连线。
+- 中英概念检索与 Fuse.js 名称模糊搜索；搜索结果解释命中原因。
+- 服务端 `/api/search`，可选 embedding 通道与 RRF 融合，未配置时使用概念搜索。
+
+## 数据与搜索边界
+
+种子包含 12 个地点、13 个名称、12 个词源分析。坐标是近似演示点，翻译与分组是带来源的草稿，并非已审核的全球词源数据库。不同名称、不同历史阶段、不同词源假说应分开记录。搜索相似度不代表词源可信度。
+
+当前没有配置模型或向量数据库：概念匹配覆盖有限表达，无法理解任意自然语言。搜索“水”没有结果表示未收录，不能推断全球不存在水相关地名。
+
+- [种子数据](data/seed.json)
+- [批量翻译草稿](data/translation-draft.jsonl)
+- [数据模型与交互设计](docs/product-design.md)（前期设计，实施现状以本 README 为准）
+- [后端与语义搜索选型](docs/search-architecture.md)
+
+正式后端推荐 PostgreSQL + pgvector，将地名、来源、审核关系和向量放在同一存储中；ES 的复杂全文能力成为明确需求时再引入。当前小样本使用版本化 JSON 与内存检索。
+
+## 可选模型接入
+
+把 `.env.example` 复制为 `.env.local`，填写受支持的 HTTPS embedding 端点、模型和密钥。运行 `npm run embeddings:generate` 生成索引，再启动或构建。查询必须使用相同模型、维度和预处理。详细限制、校准要求和迁移路径见搜索选型文档。默认不会发送请求到任何模型服务。
+
+## 技术与部署
+
+React + TypeScript，基于 Vinext/Vite 的应用与服务端路由；随项目打包 Natural Earth 底图，无地图服务 API key。当前托管配置在 `.openai/hosting.json`，环境密钥不入库。若自行部署到其他平台，需适配 Vinext 的 Worker 运行环境或迁移路由。
+
+## 贡献
+
+增加地点时保留名称语言、历史时期、词源来源、修改说明和审核状态；一个词源分析可属于多个语义主题。批量翻译只能生成待审核草稿，不能自动升级为“确定”。先扩充真实样本与查询评测集，再调整召回模型和索引架构。
+
+应用新增代码采用 MIT；词源衍生内容采用 CC BY-SA 4.0 并保留逐条来源；底图为公有领域。详见 [第三方声明](THIRD_PARTY.md)。

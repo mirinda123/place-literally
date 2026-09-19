@@ -1,0 +1,58 @@
+'use client';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {ArrowUpRight,BookOpen,Check,Compass,Globe2,Layers,Link2,Maximize,Search,X} from 'lucide-react';
+import {flushSync} from 'react-dom';
+import {conceptSearch,type SearchResponse} from '../lib/search';
+import MapView from './map-view';
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
+import {ToggleGroup,ToggleGroupItem} from '../components/ui/toggle-group';
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from '../components/ui/dialog';
+import {collections,countryNames,data,collectionRecords,primaryCollection,records,relatedTo,relationLabel,type Scope} from '../lib/atlas';
+export default function Home(){
+ const [selected,setSelected]=useState<string|null>('analysis-naples-it'),[collection,setCollection]=useState('new-settlement'),[scope,setScope]=useState<Scope>('exact'),[query,setQuery]=useState(''),[fit,setFit]=useState(0),[lines,setLines]=useState(true),[about,setAbout]=useState(false);
+
+ const [searchResult,setSearchResult]=useState<SearchResponse|null>(null),[searching,setSearching]=useState(false);
+ const cache=useRef(new Map<string,SearchResponse>());
+ async function fetchSearch(text:string,range:Scope,signal?:AbortSignal){
+  const key=range+':'+text.trim();const cached=cache.current.get(key);if(cached)return cached;
+  const response=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:text,scope:range,limit:12}),signal});
+  if(!response.ok)throw Error('Search unavailable');const result=await response.json() as SearchResponse;
+  if(cache.current.size>40)cache.current.clear();cache.current.set(key,result);return result;
+ }
+ useEffect(()=>{
+  if(!query.trim()){setSearchResult(null);setSearching(false);return;}
+  const controller=new AbortController();setSearching(true);
+  const timer=setTimeout(()=>{fetchSearch(query.trim(),scope,controller.signal).then(result=>{if(!controller.signal.aborted)setSearchResult(result);}).catch(()=>{if(!controller.signal.aborted)setSearchResult({...conceptSearch(query.trim(),scope),notice:'连接暂时不可用，已使用本地概念匹配。'});}).finally(()=>{if(!controller.signal.aborted)setSearching(false);});},250);
+  return()=>{clearTimeout(timer);controller.abort();};
+ },[query,scope]);
+ const current=records.find(r=>r.id===selected);
+ const visible=useMemo(()=>{
+  if(query.trim())return searchResult?.query===query.trim()&&searchResult.scope===scope?searchResult.results.map(hit=>records.find(r=>r.id===hit.analysis_id)).filter((r):r is typeof records[number]=>!!r):[];
+  if(current)return relatedTo(current,scope);
+  return collectionRecords(collection,scope);
+ },[query,searchResult,current,scope,collection]);
+ function select(id:string){const record=records.find(r=>r.id===id);if(!record)return;setSelected(id);setCollection(primaryCollection(record));setQuery('');}
+ function explore(id:string){setCollection(id);setScope(id==='centrality'||id==='newness'?'theme':'exact');setSelected(null);setQuery('');}
+ useEffect(()=>{
+  const context=(document as any).modelContext;if(!context?.registerTool)return;
+  const lifecycle=new AbortController();
+  const tools=[{
+   name:'select_place',title:'查看地点词源',description:'在地图中选中一个已收录地点，显示词源与关联图钉。',
+   inputSchema:{type:'object',properties:{place_id:{type:'string'},scope:{type:'string',enum:['exact','near','theme']}},required:['place_id'],additionalProperties:false},annotations:{readOnlyHint:false},
+   execute(input:any){const record=records.find(r=>r.place.id===input?.place_id);if(!record)throw Error('Unknown place_id');const range=input.scope||'exact';if(!['exact','near','theme'].includes(range))throw Error('Invalid scope');flushSync(()=>{setSelected(record.id);setCollection(primaryCollection(record));setQuery('');setScope(range);});return {place_id:record.place.id,analysis_id:record.id,related_places:relatedTo(record,range).map(r=>r.place.id)};}
+  },{
+   name:'search_meanings',title:'搜索地名与含义',description:'通过同一搜索接口查找地点名称或语义概念，并更新地图与可见结果。',
+   inputSchema:{type:'object',properties:{query:{type:'string',minLength:1,maxLength:200},scope:{type:'string',enum:['exact','near','theme']}},required:['query'],additionalProperties:false},annotations:{readOnlyHint:false},
+   async execute(input:any){if(typeof input?.query!=='string'||!input.query.trim()||input.query.length>200)throw Error('Invalid query');const range=input.scope||'near';if(!['exact','near','theme'].includes(range))throw Error('Invalid scope');const result=await fetchSearch(input.query.trim(),range);flushSync(()=>{setQuery(input.query.trim());setSelected(null);setScope(range);setSearchResult(result);setSearching(false);});return {engine:result.engine,results:result.results};}
+  }];
+  for(const tool of tools){try{Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}}
+  return()=>lifecycle.abort();
+ },[]);
+ const label=query?`“${query}”`:current?.meaning?.label.en||collections.find(c=>c.id===collection)?.label||'All names';
+ return <main className="atlas-app"><header className="app-header"><a className="brand" href="/" aria-label="Literal Name Map 首页"><span className="brand-icon"><Globe2 size={25}/></span><span>Literal Name <b>Map</b><small>A WORLD OF SHARED MEANINGS</small></span></a><form className="search-box" onSubmit={e=>e.preventDefault()} role="search"><Search size={19}/><Input aria-label="搜索地名或含义" value={query} maxLength={200} onChange={e=>{setQuery(e.target.value);setSelected(null);}} placeholder="搜索地名，或描述一种含义…"/>{query?<Button variant="ghost" type="button" aria-label="清空搜索" onClick={()=>setQuery('')}><X size={17}/></Button>:<kbd>探索</kbd>}</form><Button variant="ghost" className="about-button" onClick={()=>setAbout(true)}><BookOpen size={17}/><span>关于数据</span></Button></header>
+ <div className="workspace"><aside className="sidebar"><div className="intro"><span className="eyebrow">AN ATLAS OF ETYMOLOGIES</span><h1>The world has<br/> fewer names<br/> than you think<span>.</span></h1><p>名字不同，意思也许相同。<br/>发现地名背后的意外联系。</p></div><div className="section-heading"><h2>Explore by meaning</h2><span>含义探索</span></div><div className="collections">{collections.map(c=><Button variant="ghost" key={c.id} className={`collection ${collection===c.id&&!query?'active':''}`} onClick={()=>explore(c.id)}><span className="collection-symbol" style={{color:c.color}}>{c.symbol}</span><span><strong>{c.label}</strong><small>{c.zh}</small></span><span className="count">{collectionRecords(c.id,c.id===collection?scope:(c.id==='centrality'||c.id==='newness'?'theme':'exact')).length}</span></Button>)}</div><div className="result-heading"><span>{query?'搜索结果':'当前探索'}</span><Button variant="ghost" onClick={()=>explore('all')}>全部 {records.length} 个地点 <ArrowUpRight size={13}/></Button></div>{query&&<div className="search-status" role="status">{searching?'正在查找相关含义…':searchResult?.notice||(searchResult?.engine==='hybrid-vector'?'名称 + 向量语义匹配':'名称 + 已收录概念匹配')}</div>}<div className="place-list" aria-live="polite">{visible.length?visible.map((r,i)=><Button variant="ghost" key={r.id} className={`place-row ${selected===r.id?'chosen':''}`} onClick={()=>select(r.id)}><span className="place-index">{String(i+1).padStart(2,'0')}</span><span><strong>{r.place.display_name.en}</strong><small>{r.place.display_name.zh} · {countryNames[r.place.country_code]}</small>{query&&<span className="match-reason">{searchResult?.results.find(h=>h.analysis_id===r.id)?.reason}</span>}{!query&&current&&current.id!==r.id&&<span className="match-reason">{relationLabel(current,r)}</span>}</span><ArrowUpRight size={15}/></Button>):<div className="empty-results"><Search size={24}/><strong>{searching?'正在探索名字的含义…':'还没有找到相关名字'}</strong><p>试试「新的定居点」「首都」或「Naples」。当前使用已收录的语义概念，尚未覆盖所有自由表达。</p></div>}</div><div className="sidebar-footer"><span>✦</span> 12 个地点，一份不断生长的词源地图。</div></aside>
+ <section className="map-stage" aria-label="地图探索"><MapView all={records} visible={visible} selected={selected} onSelect={select} fit={fit} lines={lines&&scope!=='theme'}/><div className="map-context"><span className="map-context-icon"><Compass size={20}/></span><div><small>正在探索</small><strong>{label}</strong></div><span className="map-result-count">{visible.length} 个地点</span></div><ToggleGroup type="single" value={scope} onValueChange={value=>{if(value)setScope(value as Scope);}} className="scope-controls" aria-label="语义匹配范围">{([['exact','同义'],['near','相近'],['theme','主题']] as const).map(([value,text])=><ToggleGroupItem key={value} value={value} disabled={!current&&!query&&(collection==='centrality'||collection==='newness')&&value!=='theme'} aria-label={text} className={scope===value?'selected':''}>{text}</ToggleGroupItem>)}</ToggleGroup><div className="map-tools"><Button variant="ghost" onClick={()=>setFit(n=>n+1)} title="查看全部关联地点" aria-label="查看全部关联地点"><Maximize size={18}/></Button><Button variant="ghost" onClick={()=>setLines(v=>!v)} aria-pressed={lines&&scope!=='theme'} disabled={scope==='theme'} title={scope==='theme'?'主题关联不绘制连线':'显示语义连线'} aria-label="显示语义连线" className={lines?'pressed':''}><Link2 size={18}/></Button></div><div className="map-legend"><span><i className="legend-pin"/>当前含义</span><span><i className="legend-other"/>其他已收录地点</span><small>连线表示语义关系</small></div>
+ {current&&<article className="detail-card" aria-label={`${current.place.display_name.en} 词源详情`}><div className="detail-topline"><span>{current.place.kind==='ancient_city'?'古城':current.place.kind==='country'?'国家':'城市'} / {countryNames[current.place.country_code]}</span><Button variant="ghost" aria-label="关闭地点详情" onClick={()=>setSelected(null)}><X size={17}/></Button></div><h2>{current.place.display_name.en}</h2><p className="local-name">{current.place.display_name.zh} <span>· {current.name.form}</span></p><div className="meaning-block"><span>LITERALLY</span><h3>“{current.analysis.literal_translation.en}”</h3><p>{current.analysis.literal_translation.zh}</p></div><div className="etymon"><span>{current.analysis.etymon?'词源形式':'被分析的名称'}</span><strong dir="auto">{current.analysis.etymon?.form||current.name.form}</strong><small>{current.analysis.etymon?.romanization||current.name.romanization} · {current.analysis.etymon?.language||current.name.language}</small></div>{!!current.analysis.segments.length&&<div className="segments">{current.analysis.segments.map((s,i)=><span key={i}>{i>0&&<b>+</b>}<span><strong dir="auto">{s.form}</strong><small>{s.gloss_en}</small></span></span>)}</div>}<div className="evidence"><Check size={14}/><span>有词源出处 · 待复核</span></div><details><summary>查看解释与来源 <ArrowUpRight size={14}/></summary><p>{current.analysis.editorial_note_zh}</p>{current.analysis.source_ids.map(id=>{const source=data.sources.find(s=>s.id===id)!;return <a key={id} href={source.url} target="_blank" rel="noreferrer">{source.title}<ArrowUpRight size={13}/></a>;})}</details><div className="card-related"><Layers size={15}/>{visible.filter(r=>r.id!==current.id).length} 个关联地点<span>{scope==='exact'?'同义归一':scope==='near'?'相近含义':'共同主题'}</span></div></article>}{!current&&<div className="map-hint"><span>↖</span> 点击图钉，看看名字里藏着什么。</div>}</section></div>
+ <Dialog open={about} onOpenChange={setAbout}><DialogContent className="about-dialog"><span className="eyebrow">ABOUT THIS ATLAS</span><DialogTitle>地名，是小小的历史。</DialogTitle><DialogDescription>这里比较特定名称的字面含义或历史词源。“同义”遵循明确的归一规则，“相近”和“主题”允许更宽的关联；它们不代表两个名字必然同源。</DialogDescription><p>当前收录 12 个真实地点。词义附有来源，翻译和分组仍为草稿，地图位置为近似演示点。没有匹配结果，可能只是尚未收录。</p><p>词源内容改编自 Wiktionary，由贡献者共同编写，按 CC BY-SA 4.0 署名。底图来自 Natural Earth。</p><a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">了解数据许可 <ArrowUpRight size={14}/></a></DialogContent></Dialog></main>;
+}

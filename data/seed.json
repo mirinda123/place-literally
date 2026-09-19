@@ -1,0 +1,1731 @@
+{
+  "schema_version": "0.1.0",
+  "generated_on": "2026-09-19",
+  "mode": "sourced_seed_demo",
+  "description_zh": "12 个真实地点的原型种子。词义附出处，翻译及归组仍为草稿；坐标是手工近似演示锚点。不是完整全球词源数据库。",
+  "licensing": {
+    "etymology_adaptations": "CC-BY-SA-4.0; retain per-entry attribution, source links and modification notices.",
+    "location_anchors": "Manually supplied approximate demo points; no GeoNames or OSM import in this seed.",
+    "notes": "Source code licensing is separate from source-content licensing."
+  },
+  "policies": {
+    "same_meaning": "Match non-null meaning_id under the documented editorial normalization rules, then deduplicate by place_id. Do not match display translations.",
+    "near_meaning": "Use overlapping semantic cluster memberships and explicit relation explanations; preserve modifiers. No model similarity scores have been computed.",
+    "shared_concept": "Explicit theme scope; match curated memberships, while retaining the complete meaning_id. Do not infer pairwise synonymy or historical connections.",
+    "unavailable": "An absent analysis means not yet covered, not that the name has no meaning.",
+    "demo_eligibility": "Draft records are visible only with a seed/demo notice. No record is expert-reviewed.",
+    "production_eligibility": "Require review_status=reviewed and semantic_review_status=reviewed; exclude disputed analyses by default.",
+    "relation_claim": "Connections indicate normalized meaning, not ancestry, migration or historical influence."
+  },
+  "semantic_model": {
+    "version": "manual-v0.1",
+    "embedding_model": null,
+    "embedding_dimensions": null,
+    "similarity_metric": null,
+    "search_implementation": "Specification and curated seed examples only; not a running search engine."
+  },
+  "meanings": [
+    {
+      "id": "new-city",
+      "label": {
+        "en": "New City / New Town",
+        "zh": "新城"
+      },
+      "concept_ids": [
+        "new",
+        "settlement"
+      ],
+      "rule_zh": "允许 city / town 在地名释义层面归一；必须包含“新”和“城镇”，不包括 new + 专名。",
+      "grouping_status": "editorial_draft"
+    },
+    {
+      "id": "white-city",
+      "label": {
+        "en": "White City",
+        "zh": "白城"
+      },
+      "concept_ids": [
+        "white",
+        "settlement"
+      ],
+      "rule_zh": "按白色城镇归一，保留城、堡垒等原始语义；共同分组本身不证明共同词源。",
+      "grouping_status": "editorial_draft"
+    },
+    {
+      "id": "capital",
+      "label": {
+        "en": "Capital",
+        "zh": "都城"
+      },
+      "concept_ids": [
+        "capital"
+      ],
+      "rule_zh": "完整名称的主要释义是都城；含方位限定的名称不能放入本组。",
+      "grouping_status": "editorial_draft"
+    },
+    {
+      "id": "northern-capital",
+      "label": {
+        "en": "Northern Capital",
+        "zh": "北方的都城"
+      },
+      "concept_ids": [
+        "north",
+        "capital"
+      ],
+      "rule_zh": "保留北方限定。",
+      "grouping_status": "editorial_draft"
+    },
+    {
+      "id": "southern-capital",
+      "label": {
+        "en": "Southern Capital",
+        "zh": "南方的都城"
+      },
+      "concept_ids": [
+        "south",
+        "capital"
+      ],
+      "rule_zh": "保留南方限定。",
+      "grouping_status": "editorial_draft"
+    },
+    {
+      "id": "eastern-capital",
+      "label": {
+        "en": "Eastern Capital",
+        "zh": "东方的都城"
+      },
+      "concept_ids": [
+        "east",
+        "capital"
+      ],
+      "rule_zh": "保留东方限定。",
+      "grouping_status": "editorial_draft"
+    },
+    {
+      "id": "central-country",
+      "label": {
+        "en": "Central Country / State",
+        "zh": "中央之国"
+      },
+      "concept_ids": [
+        "central",
+        "country"
+      ],
+      "rule_zh": "此处分析中国自称的字面组成；不是对英文 China 的词源分析，也不抹平历史用法。",
+      "grouping_status": "editorial_draft"
+    }
+  ],
+  "places": [
+    {
+      "id": "naples-it",
+      "display_name": {
+        "en": "Naples",
+        "zh": "那不勒斯"
+      },
+      "country_code": "IT",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.268,
+          40.852
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "carthage-ancient-tn",
+      "display_name": {
+        "en": "Carthage",
+        "zh": "迦太基古城"
+      },
+      "country_code": "TN",
+      "kind": "ancient_city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.323,
+          36.853
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "veliky-novgorod-ru",
+      "display_name": {
+        "en": "Veliky Novgorod",
+        "zh": "大诺夫哥罗德"
+      },
+      "country_code": "RU",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.276,
+          58.522
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "belgrade-rs",
+      "display_name": {
+        "en": "Belgrade",
+        "zh": "贝尔格莱德"
+      },
+      "country_code": "RS",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20.448,
+          44.787
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "belgorod-ru",
+      "display_name": {
+        "en": "Belgorod",
+        "zh": "别尔哥罗德"
+      },
+      "country_code": "RU",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.587,
+          50.599
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "seoul-kr",
+      "display_name": {
+        "en": "Seoul",
+        "zh": "首尔"
+      },
+      "country_code": "KR",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          126.978,
+          37.567
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "kyoto-jp",
+      "display_name": {
+        "en": "Kyoto",
+        "zh": "京都"
+      },
+      "country_code": "JP",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.768,
+          35.012
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "beijing-cn",
+      "display_name": {
+        "en": "Beijing",
+        "zh": "北京"
+      },
+      "country_code": "CN",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          116.407,
+          39.904
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "nanjing-cn",
+      "display_name": {
+        "en": "Nanjing",
+        "zh": "南京"
+      },
+      "country_code": "CN",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.797,
+          32.061
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "tokyo-jp",
+      "display_name": {
+        "en": "Tokyo",
+        "zh": "东京"
+      },
+      "country_code": "JP",
+      "kind": "metropolis",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.692,
+          35.69
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "china-cn",
+      "display_name": {
+        "en": "China",
+        "zh": "中国"
+      },
+      "country_code": "CN",
+      "kind": "country",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104,
+          35
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    },
+    {
+      "id": "new-york-us",
+      "display_name": {
+        "en": "New York City",
+        "zh": "纽约市"
+      },
+      "country_code": "US",
+      "kind": "city",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.006,
+          40.713
+        ]
+      },
+      "coordinate_status": "approximate_demo",
+      "coordinate_source": "Manually supplied prototype anchor; not imported from a gazetteer.",
+      "external_ids": {
+        "wikidata": null,
+        "geonames": null
+      }
+    }
+  ],
+  "names": [
+    {
+      "id": "name-naples-it",
+      "place_id": "naples-it",
+      "form": "Napoli",
+      "language": "it",
+      "role": "current_endonym",
+      "romanization": null,
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-carthage-ancient-tn",
+      "place_id": "carthage-ancient-tn",
+      "form": "𐤒𐤓𐤕-𐤇𐤃𐤔𐤕",
+      "language": "phn",
+      "role": "historical_endonym",
+      "romanization": "qrt-ḥdšt",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-veliky-novgorod-ru",
+      "place_id": "veliky-novgorod-ru",
+      "form": "Новгород",
+      "language": "ru",
+      "role": "common_short_name",
+      "romanization": "Novgorod",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-belgrade-rs",
+      "place_id": "belgrade-rs",
+      "form": "Београд",
+      "language": "sr",
+      "role": "current_endonym",
+      "romanization": "Beograd",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-belgorod-ru",
+      "place_id": "belgorod-ru",
+      "form": "Белгород",
+      "language": "ru",
+      "role": "current_endonym",
+      "romanization": "Belgorod",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-seoul-kr",
+      "place_id": "seoul-kr",
+      "form": "서울",
+      "language": "ko",
+      "role": "current_endonym",
+      "romanization": "Seoul",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-kyoto-jp",
+      "place_id": "kyoto-jp",
+      "form": "京都",
+      "language": "ja",
+      "role": "current_endonym",
+      "romanization": "Kyōto",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-beijing-cn",
+      "place_id": "beijing-cn",
+      "form": "北京",
+      "language": "zh",
+      "role": "current_endonym",
+      "romanization": "Běijīng",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-nanjing-cn",
+      "place_id": "nanjing-cn",
+      "form": "南京",
+      "language": "zh",
+      "role": "current_endonym",
+      "romanization": "Nánjīng",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-tokyo-jp",
+      "place_id": "tokyo-jp",
+      "form": "東京",
+      "language": "ja",
+      "role": "current_endonym",
+      "romanization": "Tōkyō",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-china-cn",
+      "place_id": "china-cn",
+      "form": "中国",
+      "language": "zh",
+      "role": "current_endonym",
+      "romanization": "Zhōngguó",
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-new-york-us",
+      "place_id": "new-york-us",
+      "form": "New York",
+      "language": "en",
+      "role": "current_endonym",
+      "romanization": null,
+      "valid_from": null,
+      "valid_to": null
+    },
+    {
+      "id": "name-china-english",
+      "place_id": "china-cn",
+      "form": "China",
+      "language": "en",
+      "role": "exonym",
+      "romanization": null,
+      "valid_from": null,
+      "valid_to": null
+    }
+  ],
+  "analyses": [
+    {
+      "id": "analysis-naples-it",
+      "name_id": "name-naples-it",
+      "analysis_layer": "historical_etymology",
+      "etymon": {
+        "form": "Νεάπολις",
+        "language": "grc",
+        "romanization": "Neápolis"
+      },
+      "segments": [
+        {
+          "form": "νέα",
+          "gloss_en": "new",
+          "kind": "etymological_component"
+        },
+        {
+          "form": "πόλις",
+          "gloss_en": "city",
+          "kind": "etymological_component"
+        }
+      ],
+      "source_gloss_en": "new city",
+      "literal_translation": {
+        "en": "new city",
+        "zh": "新城"
+      },
+      "meaning_id": "new-city",
+      "source_ids": [
+        "src-naples"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "通过历史词形 Neapolis 解释现代地名；不能将 Napoli 当作现代意大利语两个词直接切开。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-carthage-ancient-tn",
+      "name_id": "name-carthage-ancient-tn",
+      "analysis_layer": "historical_etymology",
+      "etymon": {
+        "form": "𐤒𐤓𐤕-𐤇𐤃𐤔𐤕",
+        "language": "phn",
+        "romanization": "qrt-ḥdšt"
+      },
+      "segments": [
+        {
+          "form": "𐤒𐤓𐤕",
+          "romanization": "qrt",
+          "gloss_en": "city",
+          "kind": "etymological_component"
+        },
+        {
+          "form": "𐤇𐤃𐤔𐤕",
+          "romanization": "ḥdšt",
+          "gloss_en": "new",
+          "kind": "etymological_component"
+        }
+      ],
+      "source_gloss_en": "new city",
+      "literal_translation": {
+        "en": "new city",
+        "zh": "新城"
+      },
+      "meaning_id": "new-city",
+      "source_ids": [
+        "src-carthage"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "这里指突尼斯的古代城市，不是美国等地的同名城市。转写使用辅音形式；不要把补出的元音误标为原文字母。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-veliky-novgorod-ru",
+      "name_id": "name-veliky-novgorod-ru",
+      "analysis_layer": "historical_etymology",
+      "etymon": {
+        "form": "Новъгородъ",
+        "language": "orv",
+        "romanization": "Novŭgorodŭ"
+      },
+      "segments": [
+        {
+          "form": "новъ",
+          "gloss_en": "new",
+          "kind": "etymological_component"
+        },
+        {
+          "form": "городъ",
+          "gloss_en": "town",
+          "kind": "etymological_component"
+        }
+      ],
+      "source_gloss_en": "new town",
+      "literal_translation": {
+        "en": "new town",
+        "zh": "新城"
+      },
+      "meaning_id": "new-city",
+      "source_ids": [
+        "src-novgorod"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "分析常用短名 Novgorod；完整名称 Veliky Novgorod 还包含“伟大的”限定。原译 town 在本项目归入新城。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-belgrade-rs",
+      "name_id": "name-belgrade-rs",
+      "analysis_layer": "historical_etymology",
+      "etymon": {
+        "form": "Beograd",
+        "language": "sh",
+        "romanization": "Beograd"
+      },
+      "segments": [
+        {
+          "form": "beo",
+          "gloss_en": "white",
+          "kind": "dictionary_lemma"
+        },
+        {
+          "form": "grad",
+          "gloss_en": "city",
+          "kind": "dictionary_lemma"
+        }
+      ],
+      "source_gloss_en": "white city",
+      "literal_translation": {
+        "en": "white city",
+        "zh": "白城"
+      },
+      "meaning_id": "white-city",
+      "source_ids": [
+        "src-belgrade"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "来源词典以 Serbo-Croatian 分类；此地点名称标注塞尔维亚语。保留更早词素与堡垒相关的语义，不把它当作独立于斯拉夫语系的巧合。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-belgorod-ru",
+      "name_id": "name-belgorod-ru",
+      "analysis_layer": "historical_etymology",
+      "etymon": {
+        "form": "Бѣлъгородъ",
+        "language": "orv",
+        "romanization": "Bělŭgorodŭ"
+      },
+      "segments": [],
+      "source_gloss_en": "white city",
+      "literal_translation": {
+        "en": "white city",
+        "zh": "白城"
+      },
+      "meaning_id": "white-city",
+      "source_ids": [
+        "src-belgorod"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "指俄罗斯城市，不能把词典里同名州的释义误配到城市坐标。此条暂不细拆词素。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-seoul-kr",
+      "name_id": "name-seoul-kr",
+      "analysis_layer": "lexical_meaning",
+      "etymon": null,
+      "segments": [],
+      "source_gloss_en": "capital city",
+      "literal_translation": {
+        "en": "capital city",
+        "zh": "都城"
+      },
+      "meaning_id": "capital",
+      "source_ids": [
+        "src-seoul"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "按 서울 的词义归组，不按中文音译“首尔”逐字解释；不对其更早来源强行拆分。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-kyoto-jp",
+      "name_id": "name-kyoto-jp",
+      "analysis_layer": "lexical_meaning",
+      "etymon": {
+        "form": "京都",
+        "language": "ltc",
+        "romanization": null
+      },
+      "segments": [],
+      "source_gloss_en": "capital city",
+      "literal_translation": {
+        "en": "capital city",
+        "zh": "都城"
+      },
+      "meaning_id": "capital",
+      "source_ids": [
+        "src-kyoto"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "按完整词的都城义归组，不机械写成 capital + city；指京都市而非京都府。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-beijing-cn",
+      "name_id": "name-beijing-cn",
+      "analysis_layer": "surface_literal",
+      "etymon": null,
+      "segments": [
+        {
+          "form": "北",
+          "gloss_en": "north",
+          "kind": "character"
+        },
+        {
+          "form": "京",
+          "gloss_en": "capital",
+          "kind": "character"
+        }
+      ],
+      "source_gloss_en": "northern capital",
+      "literal_translation": {
+        "en": "northern capital",
+        "zh": "北方的都城"
+      },
+      "meaning_id": "northern-capital",
+      "source_ids": [
+        "src-beijing"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "与南京、东京共享都城概念，完整字面义不同。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-nanjing-cn",
+      "name_id": "name-nanjing-cn",
+      "analysis_layer": "surface_literal",
+      "etymon": null,
+      "segments": [
+        {
+          "form": "南",
+          "gloss_en": "south",
+          "kind": "character"
+        },
+        {
+          "form": "京",
+          "gloss_en": "capital",
+          "kind": "character"
+        }
+      ],
+      "source_gloss_en": "southern capital",
+      "literal_translation": {
+        "en": "southern capital",
+        "zh": "南方的都城"
+      },
+      "meaning_id": "southern-capital",
+      "source_ids": [
+        "src-nanjing"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "是否今天仍为国家首都，不影响名字本身的含义。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-tokyo-jp",
+      "name_id": "name-tokyo-jp",
+      "analysis_layer": "surface_literal",
+      "etymon": null,
+      "segments": [
+        {
+          "form": "東",
+          "gloss_en": "east",
+          "kind": "character"
+        },
+        {
+          "form": "京",
+          "gloss_en": "capital",
+          "kind": "character"
+        }
+      ],
+      "source_gloss_en": "eastern capital",
+      "literal_translation": {
+        "en": "eastern capital",
+        "zh": "东方的都城"
+      },
+      "meaning_id": "eastern-capital",
+      "source_ids": [
+        "src-tokyo"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "采用东京的演示锚点；行政形态标为 metropolis，不虚构一个现存东京市实体。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-china-cn",
+      "name_id": "name-china-cn",
+      "analysis_layer": "surface_literal",
+      "etymon": null,
+      "segments": [
+        {
+          "form": "中",
+          "gloss_en": "central",
+          "kind": "character"
+        },
+        {
+          "form": "国",
+          "gloss_en": "country / state",
+          "kind": "character"
+        }
+      ],
+      "source_gloss_en": "central country",
+      "literal_translation": {
+        "en": "central country",
+        "zh": "中央之国"
+      },
+      "meaning_id": "central-country",
+      "source_ids": [
+        "src-china"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "分析内名“中国／中國”的字面组成；历史上的指称范围另需说明。英文 China 单独记录且不继承此词源。坐标仅为国家图钉布局锚点，不是精确地理中心。",
+      "naming_relation": null
+    },
+    {
+      "id": "analysis-new-york-us",
+      "name_id": "name-new-york-us",
+      "analysis_layer": "surface_literal",
+      "etymon": null,
+      "segments": [
+        {
+          "form": "New",
+          "gloss_en": "new",
+          "kind": "word"
+        },
+        {
+          "form": "York",
+          "gloss_en": "proper name",
+          "kind": "proper_name"
+        }
+      ],
+      "source_gloss_en": "new + York (proper name)",
+      "literal_translation": {
+        "en": "new + York (proper name)",
+        "zh": "新＋York（专名）"
+      },
+      "meaning_id": null,
+      "source_ids": [
+        "src-new-york"
+      ],
+      "source_status": "source_found",
+      "review_status": "draft",
+      "semantic_review_status": "draft",
+      "translation_status": "draft",
+      "editorial_note_zh": "用作分组负例：不能因为有 New 就加入新城。命名缘由与约克公爵有关，此处不递归展开 York 的词源。",
+      "naming_relation": {
+        "type": "named_after",
+        "target_label": "James, Duke of York",
+        "target_external_id": null,
+        "source_ids": [
+          "src-new-york"
+        ]
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-naples",
+      "title": "Wiktionary: Naples",
+      "url": "https://en.wiktionary.org/wiki/Naples",
+      "consulted_url": "https://kaikki.org/dictionary/French/meaning/N/Na/Naples.html",
+      "section": "French > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-carthage",
+      "title": "Wiktionary: Carthage",
+      "url": "https://en.wiktionary.org/wiki/Carthage",
+      "consulted_url": "https://en.wiktionary.org/wiki/Carthage",
+      "section": "Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary entry.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-novgorod",
+      "title": "Wiktionary: Новгород",
+      "url": "https://en.wiktionary.org/wiki/%D0%9D%D0%BE%D0%B2%D0%B3%D0%BE%D1%80%D0%BE%D0%B4",
+      "consulted_url": "https://kaikki.org/dictionary/Russian/meaning/%D0%9D/%D0%9D%D0%BE/%D0%9D%D0%BE%D0%B2%D0%B3%D0%BE%D1%80%D0%BE%D0%B4.html",
+      "section": "Russian > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-belgrade",
+      "title": "Wiktionary: Beograd",
+      "url": "https://en.wiktionary.org/wiki/Beograd",
+      "consulted_url": "https://kaikki.org/dictionary/All%20languages%20combined/meaning/B/Be/Beograd.html",
+      "section": "Serbo-Croatian > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-belgorod",
+      "title": "Wiktionary: Белгород",
+      "url": "https://en.wiktionary.org/wiki/%D0%91%D0%B5%D0%BB%D0%B3%D0%BE%D1%80%D0%BE%D0%B4",
+      "consulted_url": "https://kaikki.org/dictionary/All%20languages%20combined/meaning/%D0%91/%D0%91%D0%B5/%D0%91%D0%B5%D0%BB%D0%B3%D0%BE%D1%80%D0%BE%D0%B4.html",
+      "section": "Russian > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-seoul",
+      "title": "Wiktionary: Seoul",
+      "url": "https://en.wiktionary.org/wiki/Seoul",
+      "consulted_url": "https://kaikki.org/dictionary/All%20languages%20combined/meaning/S/Se/Seoul.html",
+      "section": "English > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-kyoto",
+      "title": "Wiktionary: 京都",
+      "url": "https://en.wiktionary.org/wiki/%E4%BA%AC%E9%83%BD",
+      "consulted_url": "https://kaikki.org/dictionary/Japanese/meaning/%E4%BA%AC/%E4%BA%AC%E9%83%BD/%E4%BA%AC%E9%83%BD.html",
+      "section": "Japanese > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-beijing",
+      "title": "Wiktionary: Beijing",
+      "url": "https://en.wiktionary.org/wiki/Beijing",
+      "consulted_url": "https://en.wiktionary.org/wiki/Beijing",
+      "section": "Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary entry.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-nanjing",
+      "title": "Wiktionary: Nanjing",
+      "url": "https://en.wiktionary.org/wiki/Nanjing",
+      "consulted_url": "https://en.wiktionary.org/wiki/Nanjing",
+      "section": "Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary entry.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-tokyo",
+      "title": "Wiktionary: Tokyo",
+      "url": "https://en.wiktionary.org/wiki/Tokyo",
+      "consulted_url": "https://en.wiktionary.org/wiki/Tokyo",
+      "section": "Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary entry.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-china",
+      "title": "Wiktionary: 中國",
+      "url": "https://en.wiktionary.org/wiki/%E4%B8%AD%E5%9C%8B",
+      "consulted_url": "https://en.wiktionary.org/wiki/%E4%B8%AD%E5%9C%8B?FORM=LFACTRE",
+      "section": "Chinese > Etymology 1; compound characters; Middle Korean > Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary entry.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    },
+    {
+      "id": "src-new-york",
+      "title": "Wiktionary: New York",
+      "url": "https://en.wiktionary.org/wiki/New_York",
+      "consulted_url": "https://en.wiktionary.org/wiki/New_York",
+      "section": "Etymology",
+      "accessed_on": "2026-09-19",
+      "revision_id": null,
+      "attribution": "Wiktionary contributors",
+      "content_license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extraction_note": "Consulted Wiktionary entry.",
+      "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+    }
+  ],
+  "semantic_profiles": [
+    {
+      "analysis_id": "analysis-naples-it",
+      "head_concept": "settlement",
+      "modifier_concepts": [
+        "new"
+      ],
+      "concept_ids": [
+        "new",
+        "settlement"
+      ],
+      "semantic_text_en": "new city",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-carthage-ancient-tn",
+      "head_concept": "settlement",
+      "modifier_concepts": [
+        "new"
+      ],
+      "concept_ids": [
+        "new",
+        "settlement"
+      ],
+      "semantic_text_en": "new city",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-veliky-novgorod-ru",
+      "head_concept": "settlement",
+      "modifier_concepts": [
+        "new"
+      ],
+      "concept_ids": [
+        "new",
+        "settlement"
+      ],
+      "semantic_text_en": "new town",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-belgrade-rs",
+      "head_concept": "settlement",
+      "modifier_concepts": [
+        "white"
+      ],
+      "concept_ids": [
+        "white",
+        "settlement"
+      ],
+      "semantic_text_en": "white city",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-belgorod-ru",
+      "head_concept": "settlement",
+      "modifier_concepts": [
+        "white"
+      ],
+      "concept_ids": [
+        "white",
+        "settlement"
+      ],
+      "semantic_text_en": "white city",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-seoul-kr",
+      "head_concept": "capital",
+      "modifier_concepts": [],
+      "concept_ids": [
+        "capital"
+      ],
+      "semantic_text_en": "capital city",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-kyoto-jp",
+      "head_concept": "capital",
+      "modifier_concepts": [],
+      "concept_ids": [
+        "capital"
+      ],
+      "semantic_text_en": "capital city",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-beijing-cn",
+      "head_concept": "capital",
+      "modifier_concepts": [
+        "north"
+      ],
+      "concept_ids": [
+        "north",
+        "capital"
+      ],
+      "semantic_text_en": "northern capital",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-nanjing-cn",
+      "head_concept": "capital",
+      "modifier_concepts": [
+        "south"
+      ],
+      "concept_ids": [
+        "south",
+        "capital"
+      ],
+      "semantic_text_en": "southern capital",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-tokyo-jp",
+      "head_concept": "capital",
+      "modifier_concepts": [
+        "east"
+      ],
+      "concept_ids": [
+        "east",
+        "capital"
+      ],
+      "semantic_text_en": "eastern capital",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-china-cn",
+      "head_concept": "country",
+      "modifier_concepts": [
+        "central"
+      ],
+      "concept_ids": [
+        "central",
+        "country"
+      ],
+      "semantic_text_en": "central country",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    },
+    {
+      "analysis_id": "analysis-new-york-us",
+      "head_concept": "proper-name",
+      "modifier_concepts": [
+        "new"
+      ],
+      "concept_ids": [
+        "new",
+        "proper-name"
+      ],
+      "semantic_text_en": "new + York (proper name)",
+      "embedding": null,
+      "profile_status": "editorial_draft"
+    }
+  ],
+  "semantic_clusters": [
+    {
+      "id": "new-settlement",
+      "label": {
+        "en": "New settlements",
+        "zh": "新的城镇"
+      },
+      "parent_ids": [
+        "settlements",
+        "newness"
+      ],
+      "aliases": [
+        "新城",
+        "新镇",
+        "新的定居点",
+        "new city",
+        "new town",
+        "new settlement"
+      ],
+      "description_zh": "归一 city / town；不把 new + 专名当作新城。",
+      "method": "manual_seed",
+      "review_status": "draft"
+    },
+    {
+      "id": "white-settlement",
+      "label": {
+        "en": "White settlements",
+        "zh": "白色的城镇"
+      },
+      "parent_ids": [
+        "settlements"
+      ],
+      "aliases": [
+        "白城",
+        "白色城市",
+        "white city",
+        "white town"
+      ],
+      "description_zh": "白色与城镇概念的组合。",
+      "method": "manual_seed",
+      "review_status": "draft"
+    },
+    {
+      "id": "capital-family",
+      "label": {
+        "en": "Capitals",
+        "zh": "都城及其方位变体"
+      },
+      "parent_ids": [
+        "centrality",
+        "settlements"
+      ],
+      "aliases": [
+        "首都",
+        "都城",
+        "京城",
+        "跟首都有关系的名字",
+        "capital",
+        "capital city",
+        "seat of government"
+      ],
+      "description_zh": "包括都城、北都、南都和东都；方向差别仍然保留。",
+      "method": "manual_seed",
+      "review_status": "draft"
+    },
+    {
+      "id": "centrality",
+      "label": {
+        "en": "Centers and capitals",
+        "zh": "中心与都城"
+      },
+      "parent_ids": [],
+      "aliases": [
+        "中心",
+        "中央",
+        "中心与权力",
+        "central",
+        "center",
+        "centre",
+        "centrality"
+      ],
+      "description_zh": "策展主题，把中央之国与都城放在一起探索，不声称两者同义或同源。",
+      "method": "manual_seed",
+      "review_status": "draft"
+    },
+    {
+      "id": "settlements",
+      "label": {
+        "en": "Settlements",
+        "zh": "城镇与都城"
+      },
+      "parent_ids": [],
+      "aliases": [
+        "城",
+        "城镇",
+        "定居点",
+        "settlement",
+        "town",
+        "city"
+      ],
+      "description_zh": "只按名称含义归类，不按地点本身恰好是城市归类。",
+      "method": "manual_seed",
+      "review_status": "draft"
+    },
+    {
+      "id": "newness",
+      "label": {
+        "en": "Names containing new",
+        "zh": "名字里的“新”"
+      },
+      "parent_ids": [],
+      "aliases": [
+        "新",
+        "新的地方",
+        "名字里有新",
+        "new",
+        "newness"
+      ],
+      "description_zh": "主题模式可包括 New York，但 New York 不因此进入新城组。",
+      "method": "manual_seed",
+      "review_status": "draft"
+    }
+  ],
+  "cluster_memberships": [
+    {
+      "analysis_id": "analysis-naples-it",
+      "cluster_id": "new-settlement",
+      "relation": "equivalent",
+      "rationale_zh": "按项目规则将 new city / new town 归为新城，原译仍保留。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-naples-it",
+      "cluster_id": "newness",
+      "relation": "related",
+      "rationale_zh": "完整释义含“新”。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-naples-it",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "完整释义是一类带“新”限定的城镇。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-carthage-ancient-tn",
+      "cluster_id": "new-settlement",
+      "relation": "equivalent",
+      "rationale_zh": "按项目规则将 new city / new town 归为新城，原译仍保留。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-carthage-ancient-tn",
+      "cluster_id": "newness",
+      "relation": "related",
+      "rationale_zh": "完整释义含“新”。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-carthage-ancient-tn",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "完整释义是一类带“新”限定的城镇。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-veliky-novgorod-ru",
+      "cluster_id": "new-settlement",
+      "relation": "equivalent",
+      "rationale_zh": "按项目规则将 new city / new town 归为新城，原译仍保留。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-veliky-novgorod-ru",
+      "cluster_id": "newness",
+      "relation": "related",
+      "rationale_zh": "完整释义含“新”。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-veliky-novgorod-ru",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "完整释义是一类带“新”限定的城镇。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-belgrade-rs",
+      "cluster_id": "white-settlement",
+      "relation": "equivalent",
+      "rationale_zh": "按项目规则归为白城。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-belgrade-rs",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "完整释义是一类带颜色限定的城镇。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-belgorod-ru",
+      "cluster_id": "white-settlement",
+      "relation": "equivalent",
+      "rationale_zh": "按项目规则归为白城。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-belgorod-ru",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "完整释义是一类带颜色限定的城镇。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-seoul-kr",
+      "cluster_id": "capital-family",
+      "relation": "equivalent",
+      "rationale_zh": "完整释义是都城。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-seoul-kr",
+      "cluster_id": "centrality",
+      "relation": "related",
+      "rationale_zh": "以都城作为政治中心的探索主题；不是字面同义判断。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-seoul-kr",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "都城属于城镇概念下更具体的类别。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-kyoto-jp",
+      "cluster_id": "capital-family",
+      "relation": "equivalent",
+      "rationale_zh": "完整释义是都城。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-kyoto-jp",
+      "cluster_id": "centrality",
+      "relation": "related",
+      "rationale_zh": "以都城作为政治中心的探索主题；不是字面同义判断。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-kyoto-jp",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "都城属于城镇概念下更具体的类别。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-beijing-cn",
+      "cluster_id": "capital-family",
+      "relation": "narrower",
+      "rationale_zh": "共享都城概念，但完整名称还有方位限定。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-beijing-cn",
+      "cluster_id": "centrality",
+      "relation": "related",
+      "rationale_zh": "以都城作为政治中心的探索主题；不是字面同义判断。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-beijing-cn",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "都城属于城镇概念下更具体的类别。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-nanjing-cn",
+      "cluster_id": "capital-family",
+      "relation": "narrower",
+      "rationale_zh": "共享都城概念，但完整名称还有方位限定。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-nanjing-cn",
+      "cluster_id": "centrality",
+      "relation": "related",
+      "rationale_zh": "以都城作为政治中心的探索主题；不是字面同义判断。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-nanjing-cn",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "都城属于城镇概念下更具体的类别。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-tokyo-jp",
+      "cluster_id": "capital-family",
+      "relation": "narrower",
+      "rationale_zh": "共享都城概念，但完整名称还有方位限定。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-tokyo-jp",
+      "cluster_id": "centrality",
+      "relation": "related",
+      "rationale_zh": "以都城作为政治中心的探索主题；不是字面同义判断。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-tokyo-jp",
+      "cluster_id": "settlements",
+      "relation": "narrower",
+      "rationale_zh": "都城属于城镇概念下更具体的类别。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-china-cn",
+      "cluster_id": "centrality",
+      "relation": "related",
+      "rationale_zh": "“中央”与“都城”在中心主题下策展关联；不声称中国等于首都。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "analysis_id": "analysis-new-york-us",
+      "cluster_id": "newness",
+      "relation": "related",
+      "rationale_zh": "New 是名称中的组成部分；York 仍是专名。",
+      "method": "manual_seed",
+      "similarity_score": null
+    }
+  ],
+  "semantic_edges": [
+    {
+      "source_analysis_id": "analysis-naples-it",
+      "target_analysis_id": "analysis-carthage-ancient-tn",
+      "relation": "equivalent",
+      "explanation_zh": "原始释义均为 new city；连线不代表两地名称有传承关系。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "source_analysis_id": "analysis-naples-it",
+      "target_analysis_id": "analysis-veliky-novgorod-ru",
+      "relation": "equivalent",
+      "explanation_zh": "按 city / town 归一规则相同；Novgorod 分析的是短名。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "source_analysis_id": "analysis-belgrade-rs",
+      "target_analysis_id": "analysis-belgorod-ru",
+      "relation": "equivalent",
+      "explanation_zh": "共同归一为白城；是否同源须查看独立词源证据。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "source_analysis_id": "analysis-seoul-kr",
+      "target_analysis_id": "analysis-kyoto-jp",
+      "relation": "equivalent",
+      "explanation_zh": "完整词义均归一为都城，语言来源不同。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "source_analysis_id": "analysis-tokyo-jp",
+      "target_analysis_id": "analysis-seoul-kr",
+      "relation": "narrower",
+      "explanation_zh": "东京是带“东方”限定的都城；首尔的这条分析没有方向限定。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "source_analysis_id": "analysis-beijing-cn",
+      "target_analysis_id": "analysis-nanjing-cn",
+      "relation": "related",
+      "explanation_zh": "都城概念相同，北与南的修饰不同；不能视为完全同义。",
+      "method": "manual_seed",
+      "similarity_score": null
+    },
+    {
+      "source_analysis_id": "analysis-china-cn",
+      "target_analysis_id": "analysis-seoul-kr",
+      "relation": "related",
+      "explanation_zh": "在中心与都城主题下相关；不主张词源相同。",
+      "method": "manual_seed",
+      "similarity_score": null
+    }
+  ],
+  "search_examples": [
+    {
+      "query": "新的定居点",
+      "scope": "near",
+      "cluster_id": "new-settlement",
+      "expected_place_ids": [
+        "naples-it",
+        "carthage-ancient-tn",
+        "veliky-novgorod-ru"
+      ],
+      "explanation_zh": "别名与人工语义簇匹配；不包含 New York。"
+    },
+    {
+      "query": "跟首都有关系的名字",
+      "scope": "near",
+      "cluster_id": "capital-family",
+      "expected_place_ids": [
+        "seoul-kr",
+        "kyoto-jp",
+        "beijing-cn",
+        "nanjing-cn",
+        "tokyo-jp"
+      ],
+      "explanation_zh": "按地名的都城含义，不按今天是否为首都检索。"
+    },
+    {
+      "query": "中心",
+      "scope": "theme",
+      "cluster_id": "centrality",
+      "expected_place_ids": [
+        "seoul-kr",
+        "kyoto-jp",
+        "beijing-cn",
+        "nanjing-cn",
+        "tokyo-jp",
+        "china-cn"
+      ],
+      "explanation_zh": "宽泛主题，具体关联理由见成员记录。"
+    },
+    {
+      "query": "名字里有新",
+      "scope": "theme",
+      "cluster_id": "newness",
+      "expected_place_ids": [
+        "naples-it",
+        "carthage-ancient-tn",
+        "veliky-novgorod-ru",
+        "new-york-us"
+      ],
+      "explanation_zh": "包括 New York，但不把它翻译成新城。"
+    },
+    {
+      "query": "名字里有水的城市",
+      "scope": "near",
+      "cluster_id": null,
+      "expected_place_ids": [],
+      "explanation_zh": "当前种子尚无水相关词义；不能返回沿海城市充数。"
+    }
+  ]
+}
