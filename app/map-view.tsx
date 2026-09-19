@@ -33,7 +33,7 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    lib.setWorkerUrl(workerUrl);
    const instance=new lib.Map({container:container.current,center:[35,25],zoom:Math.max(0,Math.min(1.5,Math.log2(Math.min(container.current.clientWidth-40,container.current.clientHeight-180)/180))),minZoom:0,maxZoom:20,renderWorldCopies:false,attributionControl:false,canvasContextAttributes:{antialias:true},style});
    map.current=instance;
-   // Sidebar transitions resize the container without a window resize event.
+   // Follow actual viewport/container changes; the overlay drawer leaves these unchanged.
    resizeObserver=new ResizeObserver(()=>instance.resize());
    resizeObserver.observe(container.current);
    instance.addControl(new lib.NavigationControl({showCompass:false}),'top-right');
