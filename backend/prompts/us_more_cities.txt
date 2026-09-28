@@ -1,0 +1,21 @@
+This batch covers 50 further US OSM city nodes, distinct from the two previous
+US batches. Preserve INPUT_JSON.literal_name exactly, with lang=en. The OSM ID
+identifies the intended city when names repeat: Aurora is in Colorado,
+Arlington is in Texas, Glendale is in Arizona, Richmond is in Virginia,
+Rochester is in New York, and Saint Petersburg is in Florida.
+
+Trace a documented naming chain through older places, rivers, peoples,
+personal names, or transferred names to a credible lexical sense. Spanish,
+French, Indigenous American, and English names need linguistic evidence from
+their respective source languages. Prefer tribal language authorities, local
+historical institutions, place-name scholarship, and original records. Avoid
+folk etymologies. If the city directly honors a person, make that relationship
+clear; do not present an uncertain deeper surname root as the city's direct
+meaning. An earlier unrelated city name is not an alternate meaning of the
+current name. If a proper name has no established deeper sense, retain it
+rather than invent one.
+
+Return one to three genuinely distinct, well-supported interpretations with
+aligned zh/en/ja/fr/es translations. Keep uncertainty and sources in the
+English note. If no credible lexical meaning can be established, return
+uncertain. Cite only URLs actually checked.

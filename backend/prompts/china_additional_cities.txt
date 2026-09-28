@@ -1,0 +1,19 @@
+This batch covers 30 named OSM city nodes in mainland China and Taiwan. Explain
+the name of THAT location, not a similarly spelled city or district elsewhere.
+
+literal_name.text MUST exactly equal one value in INPUT_JSON.names, with the
+matching language tag. The selected Chinese original may end in 市; keep that
+character in literal_name.text. For 臺中市 and 臺南市, preserve 臺 rather than
+silently normalizing it to 台. Do not replace the original with a shortened
+core name even if that core is what you explain in the translations.
+
+Trace names transferred from an older town, river, mountain, person or other
+namesake only as far as credible evidence permits. Hohhot, Lhasa and Ürümqi
+derive from non-Chinese languages; verify the source-language reading and do
+not treat their Chinese transcription characters as the etymology. More
+generally, do not assume a modern Chinese character gloss proves the historic
+naming motive. Distinct interpretations should be separate aligned meanings
+only if each is supported; otherwise return uncertain.
+
+Keep zh, en, ja, fr and es in the same interpretation order. Cite only sources
+actually checked in the English note.

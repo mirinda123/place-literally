@@ -1,0 +1,13 @@
+de
+del
+el
+la
+los
+las
+país
+ciudad
+tierra
+lugar
+# Locative function words; keep río and other content words searchable.
+al
+junto

@@ -1,58 +1,55 @@
-# Literal Name Map
+# Place, Literally
 
-**The world has fewer names than you think.**
+**Explore what place names mean—and where meanings meet.**
 
-一个按字面含义探索地名的开源地图原型。点击 Naples，可以看见同样意为“新城”的 Carthage 和 Novgorod；切换“相近”与“主题”，探索更宽的联系。
+一个按字面含义探索地名的开源地图原型。点击有释义的地点，按当前界面语言查找所有类型中含义相近的地点，并用地图弧线连接。
 
 ## 本地运行
 
-需要 Node.js >= 22.13。项目当前位于 `D:\Projects\literal-name-map`。
+需要 Node.js >= 22.13、Python 3.11+ 和 Elasticsearch 9.x。先按 [后端 README](backend/README.md) 导入数据并启动 Python 服务，再启动前端：
 
 ```sh
 npm ci
 npm run dev
 ```
 
-打开终端输出的地址，默认 http://localhost:5173。`npm test` 检查搜索和归一规则；`npm run build` 构建应用。
+前端默认 http://localhost:5173/，Python 接口文档 http://127.0.0.1:8000/docs 。Vite 将 `/atlas-api/*` 转发到 Python 的 `/api/*`，目标由 `ATLAS_BACKEND_URL` 配置。
 
-## 已实现
+## 数据与搜索
 
-- MapLibre GL JS 世界地图、原生图钉与地名标注、Turf 大圆连线、覆盖式侧栏。
-- shadcn/ui + Radix 的按钮、输入、范围选择，Lucide 图标。
-- 特定名称的词源卡、拆词、来源链接和待复核标记。
-- 同义 / 相近 / 共同主题三个层次；宽主题不画同义连线。
-- 中英概念检索与 Fuse.js 名称模糊搜索；搜索结果解释命中原因。
-- 服务端 `/api/search`，可选 embedding 通道与 RRF 融合，未配置时使用概念搜索。
+应用使用 ES 的 `features-v10` 索引：每个地点保存 feature_id、kind、names、location、literal_name、按释义排列的 literal_meanings、meaning_id，另有可选 external_ids.osm。字面含义的中文、英文、日文分别使用 IK、不删除停用词的 English、Kuromoji 分词。前端通过 Python API 读取地点、查询名称及含义，无数据或请求失败时显示空状态或重试提示，不回退本地示例。
 
-## 数据与搜索边界
+搜索由 Python 和 Elasticsearch 完成。中文地名使用 CJK，中文字面含义使用 IK，英文含义使用 English（保留停用词），日文含义使用 Kuromoji；完整名称支持规范化匹配，概念与主题采用项目分组配置。地点连线默认使用文本相近搜索，也可以切换到试验性的向量模式并调节余弦相似度门槛；当前 718 个有字面释义的地点，其全部现有译文都已写入向量。旧前端 `/api/search` 路由、TypeScript 示例搜索和旧向量生成脚本及其专用测试已移除。
 
-种子包含 12 个地点、13 个名称、12 个词源分析。11 个现代地点使用当前 OpenFreeMap 底图的地名锚点，记录在 `data/map-anchors.json`；迦太基古城仍为近似演示点。翻译与分组是带来源的草稿，并非已审核的全球词源数据库。不同名称、不同历史阶段、不同词源假说应分开记录。搜索相似度不代表词源可信度。
+- [地点导入数据](data/features.json)：当前 11 个已关联 OSM 的示例地点；前端不直接读取这个文件。
+- [含义分组配置](data/meaning-groups.json)：首页分类和普通搜索使用的概念与主题配置；点选地点的相近查询直接检索 ES 释义。
+- [内容来源与许可](data/feature-attributions.json)：早期示例地点的来源与许可记录，供内容核对；详情卡暂不展示。
+- [OSM 国家名称采集与导入](docs/osm-country-collection.md)：批量获取国家节点的多语言名称，并按 OSM 身份增量写入 ES；当前本地包含 225 个国家名称节点。
+- [主要城市名称采集与导入](docs/osm-city-import.md)：按地点类型、人口和首府标记筛选，支持缓存、串行请求及失败后继续。
+- [搜索架构](docs/search-architecture.md)
+- [前期产品设计](docs/product-design.md)：历史方案，实施现状以本 README 和后端文档为准。
 
-当前没有配置模型或向量数据库：概念匹配覆盖有限表达，无法理解任意自然语言。搜索“水”没有结果表示未收录，不能推断全球不存在水相关地名。
+`data/seed.json` 与 `data/translation-draft.jsonl` 仅保留为原始来源和历史翻译草稿，不参与运行时搜索或地图读取。字面含义和分组仍是待审核内容；搜索“水”无结果仅表示未收录。
 
-- [种子数据](data/seed.json)
-- [批量翻译草稿](data/translation-draft.jsonl)
-- [数据模型与交互设计](docs/product-design.md)（前期设计，实施现状以本 README 为准）
-- [后端与语义搜索选型](docs/search-architecture.md)
+## 地图交互
 
-正式后端推荐 PostgreSQL + pgvector，将地名、来源、审核关系和向量放在同一存储中；ES 的复杂全文能力成为明确需求时再引入。当前小样本使用版本化 JSON 与内存检索。
+右上角语言菜单支持简体中文、英语、西班牙语、法语和日语，使用现有 Radix/shadcn Select。韩语文案和数据保留，但暂不提供选择入口。
+选择保存在本机浏览器，切换时保留当前地点和地图视角。搜索、侧栏、详情和操作文案一起切换；
+详情卡优先显示当前语言的 `names` 与 `literal_meanings`，原名单独列出，不再堆叠全部译文。
+缺少当前语言时回退到已收录语言并标明；没有释义时显示空状态。底图自身地名仍沿用提供方的原生多语言标签。
 
-## 可选模型接入
+React + TypeScript、MapLibre GL JS、Turf、shadcn/ui 和 Radix。OpenFreeMap 提供 OSM 在线街道底图，支持球形地球和街区缩放；Natural Earth 作为简化备用底图。
 
-把 `.env.example` 复制为 `.env.local`，填写受支持的 HTTPS embedding 端点、模型和密钥。运行 `npm run embeddings:generate` 生成索引，再启动或构建。查询必须使用相同模型、维度和预处理。详细限制、校准要求和迁移路径见搜索选型文档。默认不会发送请求到任何模型服务。
+点击底图 place 图层的国家、城市、城镇等地名，按当前提供方的 ID 编码还原 OSM 身份，调用 Python `/api/features/resolve` 精确查询 external_ids.osm。未收录、映射冲突、无可用标识和服务异常分别显示提示。换底图提供方时需要重新确认 ID 编码。
 
-## 技术与部署
+当前本地 ES 的 13,769 个地点全部已关联 OSM 节点，包含 225 个国家名称节点和 13,544 个主要城市、城镇及首府节点。新增地点只收录名称，暂未填写字面含义。未关联的迦太基古城已从当前数据集中移除。在线地图直接装饰原生 place 图层：按 ES 的 OSM 映射设置标记和文字颜色，保留底图坐标、缩放门槛、地点等级筛选和文字避让，不再叠加所有地点的独立点图层。锚点历史记录保存在 `data/map-anchors.json`；运行时关联不依赖该文件。
 
-React + TypeScript，基于 Vinext/Vite 的应用与服务端路由；使用 OpenFreeMap / OpenStreetMap 在线街道底图，无需地图服务 API key；需要联网，细节取决于 OSM 覆盖。Natural Earth 随项目打包作为简化备用底图。当前托管配置在 `.openai/hosting.json`，环境密钥不入库。若自行部署到其他平台，需适配 Vinext 的 Worker 运行环境或迁移路由。
+覆盖式侧栏不改变地图尺寸。底图标签因避让隐藏时，标记一起隐藏；标记是否随缩放出现或消失沿用底图规则，国家等原本无图标的标签不额外添加圆点。关联线在街区尺度下淡出；键盘用户可使用侧栏和可聚焦地点列表。简化备用底图最多显示当前结果中的 100 个标注。地图通过游标分页加载必要字段，侧栏分批显示；更大规模仍需要进一步实现按视野加载。
 
-## 贡献
+## 验证与部署
 
-增加地点时保留名称语言、历史时期、词源来源、修改说明和审核状态；一个词源分析可属于多个语义主题。批量翻译只能生成待审核草稿，不能自动升级为“确定”。先扩充真实样本与查询评测集，再调整召回模型和索引架构。
+`npm test` 检查前端 API、地图身份与标注逻辑；`npm run build` 构建应用。后端集成测试和配置见 [后端 README](backend/README.md)。
 
-应用新增代码采用 MIT；词源衍生内容采用 CC BY-SA 4.0 并保留逐条来源；导入的地名锚点采用 ODbL；Natural Earth 备用底图为公有领域。详见 [第三方声明](THIRD_PARTY.md)。
+前端基于 Vinext/Vite。生产环境需要可访问的 Python API：设置 `VITE_ATLAS_API_BASE_URL` 为包含 `/api` 的 HTTPS 地址并配置后端 CORS，Vite 开发代理不包含在生产构建中。本地修改不会自动更新已有托管版本。
 
-## 地图标注
-
-图钉与中英地名使用同一个 MapLibre symbol 图层，随地图一起投影，标注拥挤时文字自动避让，可见图钉可以点击。已核实地点按 OpenMapTiles 的 `place` 图层 feature ID 替换底图原标签，不按名称全局隐藏。底图锚点取自 2026-09-13 的瓦片快照（z14），并非建筑入口或行政区域边界；底图更新后应按记录的来源复核，不应仅凭相同名称自动匹配。古城不绑定现代同名城市。键盘用户可使用侧栏或地图上的可聚焦地点列表选择地点。
-
-图钉与地名文字共同按缩放层级显示：全球视角突出当前命中与国家，普通城市在 z2–3 渐显；国家文字在 z6–7 淡出，城市文字在 z12–14 淡出。图钉与文字完全隐藏后不再占据标注避让空间或留下可点击的透明点；关联线也在街区尺度下淡出。地点仍可从搜索、侧栏和键盘列表选择。阈值是本项目的显示策略，不是直接复制底图全部样式规则。
+应用新增代码采用 MIT；字面含义衍生内容保留 CC BY-SA 4.0 来源，导入的 OSM 地名锚点保留 ODbL 归属，Natural Earth 备用底图为公有领域。详见 [第三方声明](THIRD_PARTY.md)。

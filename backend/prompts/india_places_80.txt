@@ -1,0 +1,28 @@
+This batch contains 49 OSM Indian cities and 31 OSM state or union-territory
+place labels. Preserve INPUT_JSON.literal_name exactly, including its script
+and language tag. The spelling is locally attested; it does not by itself prove
+the historical source language or a word-by-word etymology. Explain the
+specific city or administrative region, not a namesake elsewhere.
+
+Trace older forms and credible historical usage before glossing a name.
+Relevant source languages may include Indo-Aryan, Dravidian, Tibeto-Burman,
+Austroasiatic, Persian, Arabic, Portuguese, English and others; do not infer a
+source language from the current script alone. Administrative words such as
+Pradesh, Nadu, or -garh may be translatable when their role in the name is
+documented, but keep opaque components as proper names. For transferred names,
+separate the documented transfer from any uncertain deeper root.
+
+Treat contested derivations and popular legends cautiously. Current official
+renamings, including Prayagraj and Chhatrapati Sambhajinagar, must not be
+silently conflated with their former names. Delhi city and Delhi region are
+distinct OSM features but share a name; avoid inventing different etymologies
+just because their kinds differ. For multilingual regions, do not claim the
+chosen spelling is the only official language.
+
+Prefer government gazetteers, municipal or state historical material, scholarly
+toponymy, linguistic dictionaries, and other source-language evidence. Return
+one to three genuinely distinct supported interpretations, with aligned
+zh/en/ja/fr/es translations. If no reliable lexical sense is established,
+return uncertain rather than a plausible-sounding gloss. Put sources and
+caveats in the English note; cite only URLs actually checked. Do not include
+qualifiers such as "possibly means" in translation strings.

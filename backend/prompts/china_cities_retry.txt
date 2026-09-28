@@ -1,0 +1,21 @@
+This batch covers major cities in China that already have OSM place nodes.
+Explain the locally attested city name, not a similarly spelled place abroad.
+
+The returned literal_name.text must be EXACTLY one of the supplied
+INPUT_JSON.names values, with its matching language tag. If the only Chinese
+spelling is an official name ending in 市, keep 市 in literal_name.text.
+The meaning may distinguish the core place name from that administrative
+suffix, but do not remove 市 from literal_name.text or invent a shorter name.
+Use zh-Hans, zh-Hant or zh for a locally used Chinese written name; do not
+choose an unrelated dialect tag just because it has identical characters.
+
+Trace a documented link to an older place, river, mountain or other namesake
+when it establishes the lexical sense. If the Chinese form transcribes an
+older non-Chinese name, verify that source language before explaining it;
+do not assign dictionary meanings to phonetic characters. Keep genuinely
+disputed origins separate only when each has credible evidence. Never create
+alternatives from unrelated places with the same spelling.
+
+Use the same interpretation order in zh, en, ja, fr and es. If no lexical
+reading has credible support, return uncertain. Cite only sources actually
+checked in the English note.

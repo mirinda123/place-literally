@@ -1,22 +1,33 @@
 'use client';
-import {greatCircle} from '@turf/great-circle';
+import {connectionOverlay} from '../lib/connection-overlay';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import {Globe2, MapPinned} from 'lucide-react';
 import {Button} from '../components/ui/button';
-import {relationLabel} from '../lib/atlas';
-import {PLACE_SOURCE,PLACE_LAYER,placeLabelText,placeIconImage,placeSymbolOpacity,placeFeatures,pinImage,replaceBasemapLabels} from '../lib/map-symbols';
+import {coordinates,displayName} from '../lib/feature-model';
+import {FALLBACK_SOURCE,FALLBACK_LAYER,INLINE_STAR_SIZES,inlineStarName,isPlaceLayer,decorateBasemapPlaces,fallbackFeatures,pinImage,meaningImage} from '../lib/map-symbols';
 import {useEffect,useRef,useState} from 'react';
-import type {AtlasRecord} from '../lib/atlas';
-import type {Map as MapType,StyleSpecification,GeoJSONSource} from 'maplibre-gl';
+import type {AtlasRecord} from '../lib/feature-model';
+import type {Map as MapType,StyleSpecification,GeoJSONSource,Popup as PopupType} from 'maplibre-gl';
+import {basemapTarget,type MapPlaceTarget} from '../lib/map-identity';
+import {useLocale} from '../components/locale-provider';
+import {localizedText,translate} from '../lib/i18n';
 
-type Props={all:AtlasRecord[];visible:AtlasRecord[];selected:string|null;onSelect:(id:string)=>void;fit:number;lines:boolean};
+type Props={all:AtlasRecord[];visible:AtlasRecord[];selected:string|null;focusRequest:{id:string;sequence:number}|null;onSelect:(id:string)=>void;onMapPlace:(target:MapPlaceTarget)=>void;onMapBackgroundClick:()=>void;fit:number;lines:boolean;highlightedConnection:string|null};
 const STREET_STYLE='https://tiles.openfreemap.org/styles/liberty';
 const fallbackStyle:StyleSpecification={version:8,glyphs:'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',sources:{world:{type:'geojson',data:'/world.geojson',attribution:'<a href="https://www.naturalearthdata.com/about/terms-of-use/">Natural Earth</a>'}},layers:[{id:'sea',type:'background',paint:{'background-color':'#dcebf1'}},{id:'land',type:'fill',source:'world',paint:{'fill-color':'#f5f7ed'}},{id:'boundaries',type:'line',source:'world',paint:{'line-color':'#bac8ce','line-width':0.65}}]};
 
-export default function MapView({all,visible,selected,onSelect,fit,lines}:Props){
+export default function MapView({all,visible,selected,focusRequest,onSelect,onMapPlace,onMapBackgroundClick,fit,lines,highlightedConnection}:Props){
+ const {locale,t}=useLocale();
  const container=useRef<HTMLDivElement>(null),map=useRef<MapType|null>(null);
+ const hoverPopup=useRef<PopupType|null>(null);
+ const lastFocusSequence=useRef(0);
+ const originalStyle=useRef<StyleSpecification>(fallbackStyle);
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[offline,setOffline]=useState(false);
- const callback=useRef(onSelect);callback.current=onSelect;
+ const mapCallback=useRef(onMapPlace);
+ const backgroundCallback=useRef(onMapBackgroundClick);
+ const recordsRef=useRef(all);
+ const recordIdsRef=useRef(new Set(all.map(record=>record.feature_id)));
+ useEffect(()=>{mapCallback.current=onMapPlace;backgroundCallback.current=onMapBackgroundClick;recordsRef.current=all;recordIdsRef.current=new Set(all.map(record=>record.feature_id));},[onMapPlace,onMapBackgroundClick,all]);
  useEffect(()=>{
   let disposed=false;
   let resizeObserver:ResizeObserver|undefined;
@@ -28,7 +39,8 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    try{
     const response=await fetch(STREET_STYLE,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(10000)])});
     if(!response.ok)throw Error('Street map unavailable');
-    style=replaceBasemapLabels(await response.json() as StyleSpecification);
+    originalStyle.current=await response.json() as StyleSpecification;
+    style=originalStyle.current;
    }catch{if(disposed)return;setOffline(true);}
    if(disposed||!container.current)return;
    lib.setWorkerUrl(workerUrl);
@@ -38,57 +50,148 @@ export default function MapView({all,visible,selected,onSelect,fit,lines}:Props)
    resizeObserver=new ResizeObserver(()=>instance.resize());
    resizeObserver.observe(container.current);
    instance.addControl(new lib.NavigationControl({showCompass:false}),'top-right');
-   instance.addControl(new lib.AttributionControl({compact:true,customAttribution:'词源地点：底图地名锚点；古城为近似位置'}),'bottom-right');
+   instance.addControl(new lib.AttributionControl({compact:true}),'bottom-right');
    instance.addControl(new lib.ScaleControl({maxWidth:100,unit:'metric'}),'bottom-left');
    instance.on('style.load',()=>{
     if(disposed)return;
     instance.setProjection({type:'globe'});
     instance.setSky({'sky-color':'#dce8f4','horizon-color':'#edf5fd','fog-color':'#edf5fd','sky-horizon-blend':0.5,'horizon-fog-blend':0.5,'atmosphere-blend':['interpolate',['linear'],['zoom'],0,0.8,4,0]});
     instance.addSource('connections',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    instance.addSource('connection-focus',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
     // Keep semantic links below street/place labels.
     const firstLabel=instance.getStyle().layers.find(layer=>layer.type==='symbol')?.id;
-    instance.addLayer({id:'connections',type:'line',source:'connections',paint:{'line-color':'#315bc9','line-width':2,'line-opacity':['interpolate',['linear'],['zoom'],0,0.75,12,0.75,14,0],'line-dasharray':[3,3]}},firstLabel);
-    instance.addSource(PLACE_SOURCE,{type:'geojson',data:{type:'FeatureCollection',features:[]},maxzoom:18});
+    instance.addLayer({id:'connections',type:'line',source:'connections',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':'#6fa6e1','line-width':2.5,'line-opacity':['interpolate',['linear'],['zoom'],0,0.9,12,0.9,14,0],'line-dasharray':[3,3]}},firstLabel);
+    instance.addLayer({id:'connections-hit',type:'line',source:'connections',maxzoom:14,paint:{'line-color':'#6fa6e1','line-width':14,'line-opacity':0.001}},firstLabel);
     for(const [id,color,radius,halo] of [['atlas-other','#95a6b3',4,false],['atlas-active','#4267c6',7,false],['atlas-near','#a5b9e8',7,false],['atlas-selected','#315bc9',9,true]] as const){instance.addImage(id,pinImage(color,radius,halo),{pixelRatio:2});}
-    instance.addLayer({id:PLACE_LAYER,type:'symbol',source:PLACE_SOURCE,maxzoom:14,layout:{
-     'icon-image':placeIconImage,'icon-allow-overlap':true,'text-optional':true,
-     'symbol-sort-key':['get','priority'],'icon-padding':0,
-     'text-field':placeLabelText,
-     'text-font':['Noto Sans Regular'],'text-size':12,'text-anchor':'left','text-offset':[1.15,0],
-     'text-max-width':12,'text-padding':4,'text-allow-overlap':false,
-    },paint:{'icon-opacity':placeSymbolOpacity,'text-opacity':placeSymbolOpacity,'text-color':['get','color'],'text-halo-color':'#ffffff','text-halo-width':2}});
-    instance.on('click',PLACE_LAYER,event=>{const id=event.features?.[0]?.properties?.analysis_id;if(typeof id==='string')callback.current(id);});
-    instance.on('mouseenter',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='pointer';});
-    instance.on('mouseleave',PLACE_LAYER,()=>{instance.getCanvas().style.cursor='';});
+    instance.addImage('atlas-meaning',meaningImage(),{pixelRatio:2});
+    instance.addImage('atlas-meaning-selected',meaningImage(true),{pixelRatio:2});
+    for(const size of INLINE_STAR_SIZES){
+     instance.addImage(inlineStarName(size),meaningImage(false,size),{pixelRatio:2});
+     instance.addImage(inlineStarName(size,true),meaningImage(true,size),{pixelRatio:2});
+    }
+    const placeLayers=instance.getStyle().layers.filter(isPlaceLayer).map(layer=>layer.id);
+    if(!placeLayers.length){
+     instance.addSource(FALLBACK_SOURCE,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+     instance.addLayer({id:FALLBACK_LAYER,type:'symbol',source:FALLBACK_SOURCE,layout:{
+      'icon-image':['get','icon'],'icon-allow-overlap':false,'text-optional':false,
+      'text-field':['get','label'],'text-font':['Noto Sans Regular'],'text-size':12,
+      'text-anchor':'left','text-offset':[1.15,0],'text-allow-overlap':false,
+     },paint:{'text-color':'#315bc9','text-halo-color':'#fff','text-halo-width':1}});
+    }
+    instance.addLayer({id:'connection-focus-label',type:'symbol',source:'connection-focus',layout:{
+     'text-field':['get','label'],'text-font':['Noto Sans Regular'],'text-size':14,
+     'text-anchor':'bottom','text-offset':[0,-0.7],'text-allow-overlap':true,
+    },paint:{'text-color':'#315bc9','text-halo-color':'#fff','text-halo-width':2.5}});
+    const hitLayers=placeLayers.length?placeLayers:[FALLBACK_LAYER];
+    const linkedTarget=(feature:ReturnType<typeof instance.queryRenderedFeatures>[number])=>{
+     const id=feature.properties?.feature_id;
+     return typeof id==='string'&&recordIdsRef.current.has(id)?id:null;
+    };
+    instance.on('click',event=>{
+     const hits=instance.queryRenderedFeatures(event.point,{layers:hitLayers});
+     const own=hits.find(feature=>feature.layer.id===FALLBACK_LAYER);
+     if(own){
+      const record=recordsRef.current.find(r=>r.feature_id===own.properties.feature_id);
+      if(record)mapCallback.current({name:displayName(record,'zh'),osm:record.external_ids?.osm[0],featureId:record.feature_id});
+      return;
+     }
+     for(const hit of hits){const target=basemapTarget(hit);if(target){mapCallback.current(target);return;}}
+     backgroundCallback.current();
+    });
+    instance.on('mousemove',event=>{
+     const link=instance.queryRenderedFeatures(event.point,{layers:['connections-hit']})[0];
+     const target=link&&linkedTarget(link);
+     instance.getCanvas().style.cursor=instance.queryRenderedFeatures(event.point,{layers:hitLayers}).length?'pointer':'';
+     if(target){
+      const label=String(link.properties?.label||target);
+      if(!hoverPopup.current)hoverPopup.current=new lib.Popup({closeButton:false,closeOnClick:false,offset:12,className:'connection-target-tooltip'});
+      hoverPopup.current.setLngLat(event.lngLat).setText(label);
+      if(!hoverPopup.current.isOpen())hoverPopup.current.addTo(instance);
+     }else{
+      hoverPopup.current?.remove();
+     }
+    });
+    instance.on('mouseout',()=>{hoverPopup.current?.remove();instance.getCanvas().style.cursor='';});
     setReady(true);
    });
    instance.on('load',()=>{if(!disposed){clearTimeout(timeout);setFailed(false);}});
    instance.on('error',()=>{if(!disposed)setFailed(true);});
   }
   initialize().catch(()=>{if(!disposed)setFailed(true);});
-  return()=>{disposed=true;resizeObserver?.disconnect();controller.abort();clearTimeout(timeout);map.current?.remove();map.current=null;};
+  return()=>{disposed=true;resizeObserver?.disconnect();controller.abort();clearTimeout(timeout);hoverPopup.current?.remove();map.current?.remove();map.current=null;};
  },[]);
 
  useEffect(()=>{
   if(!ready||!map.current)return;
-  (map.current.getSource(PLACE_SOURCE) as GeoJSONSource)?.setData(placeFeatures(all,visible,selected));
-  const origin=all.find(r=>r.id===selected);
-  const features=lines&&origin?visible.filter(r=>r.id!==selected).map(r=>greatCircle(origin.place.geometry.coordinates,r.place.geometry.coordinates,{npoints:64,properties:{relation:relationLabel(origin,r)}})):[];
-  (map.current.getSource('connections') as GeoJSONSource)?.setData({type:'FeatureCollection',features});
- },[ready,all,visible,selected,lines]);
+  for(const layer of decorateBasemapPlaces(originalStyle.current,all,visible,selected).layers){
+   if(!isPlaceLayer(layer))continue;
+   const originalLayer=originalStyle.current.layers.find(original=>original.id===layer.id);
+   if(originalLayer&&isPlaceLayer(originalLayer)&&originalLayer.layout?.['icon-image']){
+    map.current.setLayoutProperty(layer.id,'icon-image',layer.layout?.['icon-image']);
+    map.current.setLayoutProperty(layer.id,'text-optional',false);
+   }
+   map.current.setLayoutProperty(layer.id,'text-field',layer.layout?.['text-field']);
+   map.current.setPaintProperty(layer.id,'text-color',layer.paint?.['text-color']);
+  }
+ },[ready,all,visible,selected]);
+
+ useEffect(()=>{
+  if(!ready||!map.current)return;
+  const controls=map.current.getContainer();
+  for(const [selector,key] of [['.maplibregl-ctrl-zoom-in','zoomIn'],['.maplibregl-ctrl-zoom-out','zoomOut']] as const){
+   const button=controls.querySelector<HTMLButtonElement>(selector);
+   if(button){button.title=translate(locale,key);button.setAttribute('aria-label',translate(locale,key));}
+  }
+ },[ready,locale]);
+
+ useEffect(()=>{
+  if(!ready||!map.current?.getSource('connections'))return;
+  (map.current.getSource(FALLBACK_SOURCE) as GeoJSONSource|undefined)?.setData(fallbackFeatures(visible,selected,locale));
+  const origin=all.find(r=>r.feature_id===selected);
+  const overlay=lines&&origin?connectionOverlay(origin,visible,locale):null;
+  hoverPopup.current?.remove();
+  (map.current.getSource('connections') as GeoJSONSource)?.setData(overlay?.arcs||{type:'FeatureCollection',features:[]});
+ },[ready,all,visible,selected,lines,locale]);
+
+ useEffect(()=>{
+  if(!ready||!map.current?.getSource('connections'))return;
+  const focus=lines&&selected?visible.find(record=>record.feature_id===highlightedConnection&&record.feature_id!==selected):undefined;
+  map.current.setPaintProperty('connections','line-opacity',focus?[
+   'interpolate',['linear'],['zoom'],0,['case',['==',['get','feature_id'],focus.feature_id],0.95,0.1],
+   12,['case',['==',['get','feature_id'],focus.feature_id],0.95,0.1],14,0,
+  ]:['interpolate',['linear'],['zoom'],0,0.9,12,0.9,14,0]);
+  map.current.setPaintProperty('connections','line-width',focus?['case',['==',['get','feature_id'],focus.feature_id],4,2]:2.5);
+  (map.current.getSource('connection-focus') as GeoJSONSource)?.setData({type:'FeatureCollection',features:focus?[{
+   type:'Feature',geometry:{type:'Point',coordinates:coordinates(focus)},
+   properties:{label:localizedText(focus.names,locale)?.text||displayName(focus)},
+  }]:[]});
+ },[ready,visible,selected,lines,highlightedConnection,locale]);
 
  function duration(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:900;}
+ useEffect(()=>{
+  if(!ready||!map.current||!focusRequest||focusRequest.sequence===lastFocusSequence.current)return;
+  const place=all.find(record=>record.feature_id===focusRequest.id);
+  if(!place)return;
+  lastFocusSequence.current=focusRequest.sequence;
+  const zoom=place.kind==='country'?4:place.kind==='state'||place.kind==='province'?5:['town','village'].includes(place.kind)?9:['city','metropolis','ancient_city'].includes(place.kind)?7:6;
+  // The sidebar overlays the canvas, so center the destination in the uncovered map area.
+  const panelOpen=container.current?.closest('.atlas-app')?.getAttribute('data-panel-open')==='true';
+  const sidebarWidth=panelOpen&&window.innerWidth>=768?document.getElementById('meaning-sidebar')?.getBoundingClientRect().width||0:0;
+  map.current.flyTo({center:coordinates(place),zoom,offset:[sidebarWidth/2,0],duration:duration()});
+ },[ready,focusRequest,all]);
  function showGlobe(){if(!map.current||!container.current)return;const availableWidth=container.current.clientWidth-(selected&&window.innerWidth>1050?370:50);const diameter=Math.max(180,Math.min(availableWidth,container.current.clientHeight-170));map.current.flyTo({zoom:Math.log2(diameter/180),center:map.current.getCenter(),pitch:0,bearing:0,padding:0,offset:selected&&window.innerWidth>1050?[-185,0]:[0,0],duration:duration()});}
- function showStreets(){const place=all.find(r=>r.id===selected);if(place)map.current?.flyTo({center:place.place.geometry.coordinates as [number,number],zoom:14,pitch:0,bearing:0,padding:0,offset:window.innerWidth>1050?[-170,0]:[0,-100],duration:duration()});}
+ function showStreets(){const place=all.find(r=>r.feature_id===selected);if(place)map.current?.flyTo({center:coordinates(place) as [number,number],zoom:14,pitch:0,bearing:0,padding:0,offset:window.innerWidth>1050?[-170,0]:[0,-100],duration:duration()});}
  useEffect(()=>{
   if(!fit||!ready||!map.current||!visible.length)return;
-  const xs=visible.map(r=>r.place.geometry.coordinates[0]),ys=visible.map(r=>r.place.geometry.coordinates[1]);const pad=window.innerWidth<800?65:100;
+  const xs=visible.map(r=>coordinates(r)[0]),ys=visible.map(r=>coordinates(r)[1]);const pad=window.innerWidth<800?65:100;
   map.current.fitBounds([[Math.min(...xs)-3,Math.min(...ys)-3],[Math.max(...xs)+3,Math.max(...ys)+3]],{padding:{top:100,bottom:pad,left:pad,right:window.innerWidth>1050&&selected?380:pad},maxZoom:4,duration:duration()});
+ // Fit only when requested; selection and result changes should not move the camera.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
  },[fit,ready]);
  return <>
-  <div ref={container} className="map-canvas" aria-label="可拖动和缩放的世界地名地图"/>
-  <nav className="map-keyboard-places" aria-label="地图地点，键盘选择"><span>地图上的地点</span>{all.map(record=><Button key={record.id} variant="ghost" aria-pressed={selected===record.id} onClick={()=>onSelect(record.id)}>{record.place.display_name.zh} · {record.place.display_name.en}</Button>)}</nav>
-  <div className="map-view-actions"><Button variant="ghost" disabled={!ready} onClick={showGlobe} aria-label="缩小到地球" title="缩小到地球"><Globe2 size={18}/></Button><Button variant="ghost" disabled={!ready||!selected||offline} onClick={showStreets} aria-label="放大到所选地点街区" title="放大到所选地点街区"><MapPinned size={18}/></Button></div>
-  {(failed||offline)&&<div className="map-load-notice" role="status">{offline?'街道底图连接失败，暂时显示简化地球。刷新可重试。':'部分地图资源暂时无法加载，请检查网络后刷新。'}</div>}
+  <div ref={container} className="map-canvas" aria-label={t('map')}/>
+  <nav className="map-keyboard-places" aria-label={t('mapPlaces')}><span>{t('keyboardHint')}</span>{visible.slice(0,100).map(record=><Button key={record.feature_id} variant="ghost" aria-pressed={selected===record.feature_id} onClick={()=>onSelect(record.feature_id)}>{localizedText(record.names,locale)?.text||record.feature_id}</Button>)}</nav>
+  <div className="map-view-actions"><Button variant="ghost" disabled={!ready} onClick={showGlobe} aria-label={t('globe')} title={t('globe')}><Globe2 size={18}/></Button><Button variant="ghost" disabled={!ready||!selected||offline} onClick={showStreets} aria-label={t('streets')} title={t('streets')}><MapPinned size={18}/></Button></div>
+  {(failed||offline)&&<div className="map-load-notice" role="status">{t(offline?'offline':'mapError')}</div>}
  </>;
 }

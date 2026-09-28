@@ -1,0 +1,348 @@
+[
+  {
+    "feature_id": "beijing-cn",
+    "kind": "city",
+    "names": {
+      "en": "Beijing",
+      "zh": "北京",
+      "zh-Latn": "Běijīng"
+    },
+    "location": {
+      "lon": 116.39129519462585,
+      "lat": 39.90571183235983
+    },
+    "literal_name": {
+      "text": "北京",
+      "lang": "zh"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "northern capital",
+          "zh": "北方的都城"
+        }
+      }
+    ],
+    "meaning_id": "northern-capital",
+    "external_ids": {
+      "osm": [
+        "node/25248662"
+      ]
+    }
+  },
+  {
+    "feature_id": "belgorod-ru",
+    "kind": "city",
+    "names": {
+      "en": "Belgorod",
+      "zh": "别尔哥罗德",
+      "ru": "Белгород",
+      "ru-Latn": "Belgorod"
+    },
+    "location": {
+      "lon": 36.587337255477905,
+      "lat": 50.59555853434932
+    },
+    "literal_name": {
+      "text": "Белгород",
+      "lang": "ru"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "white city",
+          "zh": "白城"
+        }
+      }
+    ],
+    "meaning_id": "white-city",
+    "external_ids": {
+      "osm": [
+        "node/27119039"
+      ]
+    }
+  },
+  {
+    "feature_id": "belgrade-rs",
+    "kind": "city",
+    "names": {
+      "en": "Belgrade",
+      "zh": "贝尔格莱德",
+      "sr": "Београд",
+      "sr-Latn": "Beograd"
+    },
+    "location": {
+      "lon": 20.456897020339966,
+      "lat": 44.81781356586578
+    },
+    "literal_name": {
+      "text": "Београд",
+      "lang": "sr"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "white city",
+          "zh": "白城"
+        }
+      }
+    ],
+    "meaning_id": "white-city",
+    "external_ids": {
+      "osm": [
+        "node/60571493"
+      ]
+    }
+  },
+  {
+    "feature_id": "china-cn",
+    "kind": "country",
+    "names": {
+      "en": "China",
+      "zh": "中国",
+      "zh-Latn": "Zhōngguó"
+    },
+    "location": {
+      "lon": 108.92370879650116,
+      "lat": 34.541224669456525
+    },
+    "literal_name": {
+      "text": "中国",
+      "lang": "zh"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "central country",
+          "zh": "中央之国"
+        }
+      }
+    ],
+    "meaning_id": "central-country",
+    "external_ids": {
+      "osm": [
+        "node/424313582"
+      ]
+    }
+  },
+  {
+    "feature_id": "kyoto-jp",
+    "kind": "city",
+    "names": {
+      "en": "Kyoto",
+      "zh": "京都",
+      "ja": "京都",
+      "ja-Latn": "Kyōto"
+    },
+    "location": {
+      "lon": 135.768141746521,
+      "lat": 35.01157586000204
+    },
+    "literal_name": {
+      "text": "京都",
+      "lang": "ja"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "capital city",
+          "zh": "都城"
+        }
+      }
+    ],
+    "meaning_id": "capital",
+    "external_ids": {
+      "osm": [
+        "node/533681139"
+      ]
+    }
+  },
+  {
+    "feature_id": "nanjing-cn",
+    "kind": "city",
+    "names": {
+      "en": "Nanjing",
+      "zh": "南京",
+      "zh-Latn": "Nánjīng"
+    },
+    "location": {
+      "lon": 118.77886354923248,
+      "lat": 32.04382775826305
+    },
+    "literal_name": {
+      "text": "南京",
+      "lang": "zh"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "southern capital",
+          "zh": "南方的都城"
+        }
+      }
+    ],
+    "meaning_id": "southern-capital",
+    "external_ids": {
+      "osm": [
+        "node/244081381"
+      ]
+    }
+  },
+  {
+    "feature_id": "naples-it",
+    "kind": "city",
+    "names": {
+      "en": "Naples",
+      "zh": "那不勒斯",
+      "it": "Napoli"
+    },
+    "location": {
+      "lon": 14.24876868724823,
+      "lat": 40.83588379874956
+    },
+    "literal_name": {
+      "text": "Napoli",
+      "lang": "it"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "new city",
+          "zh": "新城"
+        }
+      }
+    ],
+    "meaning_id": "new-city",
+    "external_ids": {
+      "osm": [
+        "node/428339558"
+      ]
+    }
+  },
+  {
+    "feature_id": "new-york-us",
+    "kind": "city",
+    "names": {
+      "en": "New York City",
+      "zh": "纽约市"
+    },
+    "location": {
+      "lon": -74.0060144662857,
+      "lat": 40.71272785357016
+    },
+    "literal_name": {
+      "text": "New York",
+      "lang": "en"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "new + York (proper name)",
+          "zh": "新＋York（专名）"
+        }
+      }
+    ],
+    "meaning_id": null,
+    "external_ids": {
+      "osm": [
+        "node/61785451"
+      ]
+    }
+  },
+  {
+    "feature_id": "seoul-kr",
+    "kind": "city",
+    "names": {
+      "en": "Seoul",
+      "zh": "首尔",
+      "ko": "서울",
+      "ko-Latn": "Seoul"
+    },
+    "location": {
+      "lon": 126.97829067707062,
+      "lat": 37.56667863553625
+    },
+    "literal_name": {
+      "text": "서울",
+      "lang": "ko"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "capital city",
+          "zh": "都城"
+        }
+      }
+    ],
+    "meaning_id": "capital",
+    "external_ids": {
+      "osm": [
+        "node/1912365631"
+      ]
+    }
+  },
+  {
+    "feature_id": "tokyo-jp",
+    "kind": "metropolis",
+    "names": {
+      "en": "Tokyo",
+      "zh": "东京",
+      "ja": "東京",
+      "ja-Latn": "Tōkyō"
+    },
+    "location": {
+      "lon": 139.76389288902283,
+      "lat": 35.6768599988893
+    },
+    "literal_name": {
+      "text": "東京",
+      "lang": "ja"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "eastern capital",
+          "zh": "东方的都城"
+        }
+      }
+    ],
+    "meaning_id": "eastern-capital",
+    "external_ids": {
+      "osm": [
+        "node/265018692"
+      ]
+    }
+  },
+  {
+    "feature_id": "veliky-novgorod-ru",
+    "kind": "city",
+    "names": {
+      "en": "Veliky Novgorod",
+      "zh": "大诺夫哥罗德",
+      "ru": "Новгород",
+      "ru-Latn": "Novgorod"
+    },
+    "location": {
+      "lon": 31.27578556537628,
+      "lat": 58.52098556249004
+    },
+    "literal_name": {
+      "text": "Новгород",
+      "lang": "ru"
+    },
+    "literal_meanings": [
+      {
+        "translations": {
+          "en": "new town",
+          "zh": "新城"
+        }
+      }
+    ],
+    "meaning_id": "new-city",
+    "external_ids": {
+      "osm": [
+        "node/27017589"
+      ]
+    }
+  }
+]

@@ -1,0 +1,17 @@
+This batch contains 50 further European OSM city nodes, all distinct from the
+earlier Europe and UK batches. Preserve INPUT_JSON.literal_name exactly,
+including its script, spelling and language tag. The OSM ID identifies the
+city when names repeat (for example Brest in France and not Belarus).
+
+Trace documented older forms and naming events to a credible lexical sense.
+For cities with several official languages, explain the selected original
+name rather than silently switching to another language. A city may be named
+after a person, river, people or older settlement: retain a proper name when
+its deeper root is not established. Do not infer etymology from a modern
+lookalike word, a folk legend or a translated English exonym.
+
+Prefer scholarly place-name studies, city archives and source-language
+dictionaries. Return one to three genuinely distinct, supported readings
+with aligned zh/en/ja/fr/es translations. Put caveats and checked source URLs
+in the English note, not in the translation strings. If no reliable lexical
+meaning is established, return uncertain instead of inventing one.

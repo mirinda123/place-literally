@@ -1,0 +1,18 @@
+This batch covers major cities in China that already have OSM place nodes.
+Explain the locally attested city name, not a similarly spelled place abroad.
+For Chinese-derived names, prefer an attested Chinese spelling and distinguish
+the core name from the administrative suffix 市. Do not choose an unrelated
+language tag merely because it has a shorter or identical character string.
+
+Trace a documented link to an older place, river, mountain or other namesake
+when it establishes the lexical sense. If the modern Chinese form transcribes
+an older non-Chinese name, verify that source language before explaining it;
+do not assign character-by-character Chinese dictionary meanings to a
+transcription. Keep genuine disputed origins as separate readings only when
+each has credible evidence. Do not manufacture alternative readings from
+isolated character meanings or unrelated places with the same spelling.
+
+Use the same meaning and interpretation order in zh, en, ja, fr and es. If
+credible support for a lexical reading is lacking, return uncertain rather
+than an attractive guess. Name the sources actually checked in the English
+note; never invent a citation.

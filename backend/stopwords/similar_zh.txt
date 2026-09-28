@@ -1,0 +1,7 @@
+# Query-only stop words for /similar. Keep direction, color and negation terms.
+的
+之
+之国
+城市
+之地
+地方

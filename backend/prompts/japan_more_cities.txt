@@ -1,0 +1,22 @@
+This batch covers 50 further Japanese OSM place=city nodes, separate from the
+earlier 30-city batch and the Tokyo seed. Each original Japanese name is pinned
+in INPUT_JSON.literal_name; preserve its text EXACTLY, with lang=ja, including
+市 and any kana. The administrative 市 belongs to the spelling but is not an
+independent etymology. Translate the underlying place name's documented
+lexical sense, adding a natural city qualifier only if needed.
+
+Research older written and spoken forms before interpreting today's kanji.
+Characters can be phonetic spellings, later respellings, transfers, or parts of
+merged administrative names; their modern dictionary meanings alone do not
+prove the historical origin. Trace credible naming chains through settlements,
+geographic features, shrines, people, and companies. Distinguish Japanese
+regional names from Ainu, Ryukyuan, and other source languages where relevant.
+Do not confuse a city with a namesake, Tokyo ward, or nearby district.
+
+Prefer Japanese municipal/prefectural historical material, national cultural
+or linguistic institutions, historical dictionaries, and academic toponymy.
+Return one to three genuinely distinct, supported interpretations with aligned
+zh/en/ja/fr/es translations. If the deeper root is not established, retain its
+proper name or return uncertain; never fabricate a lexical gloss. Put evidence
+and caveats in the English note, not filler inside translations. Cite only URLs
+actually checked.

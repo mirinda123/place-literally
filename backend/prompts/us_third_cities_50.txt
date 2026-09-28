@@ -1,0 +1,19 @@
+This batch contains 50 further US OSM city nodes, distinct from all earlier
+US city batches. Preserve INPUT_JSON.literal_name exactly, with lang=en.
+Use the OSM ID and context to distinguish namesakes: Glendale is in
+California, Vancouver in Washington, Aurora in Illinois, and Springfield in
+Missouri.
+
+Trace a documented naming chain through a person, older place, river,
+Indigenous people or language, Spanish or French phrase, or English phrase.
+If a city honors a person, explain that connection while keeping an opaque
+personal or family name intact. Do not convert an unrelated earlier name of
+the city into an alternative meaning of the current one. Avoid folk
+etymology and modern lookalike words.
+
+Prefer tribal language authorities, municipal and state histories,
+scholarly toponymy, original records and source-language dictionaries.
+Return one to three genuinely distinct supported interpretations with
+aligned zh/en/ja/fr/es translations. Put caveats and checked source URLs in
+the English note. If no credible lexical meaning is established, return
+uncertain instead of inventing one.

@@ -1,0 +1,20 @@
+These 34 targets are Chinese province-level place labels, including the names
+of Beijing, Hong Kong, Macau and Taiwan already present in ES. For a Hanzi
+name, prefer a locally appropriate Chinese language tag (zh, zh-Hans, zh-Hant,
+or a genuinely local vernacular such as yue for Hong Kong or wuu for Shanghai).
+Do not select a tag from a geographically unrelated Chinese variety simply
+because it has a shorter spelling. The full official name may include 省, 市,
+自治区 or 特别行政区; that is acceptable as literal_name. Explain the meaningful
+name stem and administrative suffix naturally in the translations.
+
+Research the documented naming history before translating individual Hanzi.
+Some province names join the names of earlier prefectures or cities: 安徽省
+comes from 安庆 and 徽州; 江苏省 from 江宁 and 苏州. For such a name, do not call
+安徽 "peaceful and beautiful" or 江苏 "river awakening" based only on the
+characters. Translate the supported naming chain, retaining proper names
+whose own deeper lexical origin is unverified. Trace an older component's
+lexical meaning only when a reliable source supports it. For directly
+descriptive names, keep their geographic referent and direction (for example,
+河北 is north of the relevant river, not merely "north"). Do not confuse
+the origin of a current regional label with a modern literal reading of its
+characters. Put evidence and uncertainty in note, never in translation values.

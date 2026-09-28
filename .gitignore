@@ -46,3 +46,9 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# Python backend
+**/.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/

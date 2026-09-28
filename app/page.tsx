@@ -1,60 +1,247 @@
 'use client';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {ArrowUpRight,Check,Compass,Layers,Link2,Maximize,Search,X} from 'lucide-react';
+import {ArrowUpRight,ChevronLeft,Link2,Maximize,PanelLeft,Search,X} from 'lucide-react';
 import {flushSync} from 'react-dom';
-import {conceptSearch,type SearchResponse} from '../lib/search';
+import {loadAtlas,searchAtlas,loadRecord,resolveMapPlace,similarPlaces,vectorSimilarPlaces,type SearchResponse,type SimilarResponse,type VectorSimilarResponse} from '../lib/atlas-api';
+import type {MapPlaceTarget} from '../lib/map-identity';
 import MapView from './map-view';
 import {Button} from '../components/ui/button';
 import {Input} from '../components/ui/input';
+import {Slider} from '../components/ui/slider';
 import {Sidebar,SidebarProvider,SidebarTrigger,useSidebar} from '../components/ui/sidebar';
-import {ToggleGroup,ToggleGroupItem} from '../components/ui/toggle-group';
-import {collections,countryNames,data,collectionRecords,primaryCollection,records,relatedTo,relationLabel,type Scope} from '../lib/atlas';
-export default function Home(){return <SidebarProvider className="atlas-provider"><Atlas /></SidebarProvider>;}
+import {hasLiteralMeaning,type AtlasRecord} from '../lib/feature-model';
+import {LocaleProvider,useLocale} from '../components/locale-provider';
+import {LanguageSwitcher} from '../components/language-switcher';
+import {PlaceDetail} from '../components/place-detail';
+import {kindName,languageName,localizedText,relatedListLabels,vectorLabels} from '../lib/i18n';
+import {relatedMeanings} from '../lib/related-places';
+export default function Home(){return <LocaleProvider><SidebarProvider className="atlas-provider" defaultOpen={false}><Atlas /></SidebarProvider></LocaleProvider>;}
+function SimilarityThreshold({label,value,onCommit}:{label:string;value:number;onCommit:(value:number)=>void}){
+ const [draft,setDraft]=useState(value);
+ useEffect(()=>setDraft(value),[value]);
+ return <div className="vector-threshold"><span id="vector-threshold-label">{label}</span><output>{draft.toFixed(2)}</output>
+  <Slider className="material-threshold-slider" min={50} max={90} step={1} value={[Math.round(draft*100)]} aria-labelledby="vector-threshold-label" aria-valuetext={draft.toFixed(2)} onValueChange={values=>setDraft(values[0]/100)} onValueCommit={values=>onCommit(values[0]/100)}/>
+ </div>;
+}
 function Atlas(){
- const {open,isMobile,openMobile,setOpenMobile}=useSidebar();
+ const {locale,t}=useLocale();
+ const vectorText=vectorLabels[locale];
+ const relatedText=relatedListLabels[locale];
+ const nameOf=(r:AtlasRecord)=>localizedText(r.names,locale)?.text||r.feature_id;
+ const [records,setRecords]=useState<AtlasRecord[]>([]),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(''),[reload,setReload]=useState(0);
+ useEffect(()=>{
+  const controller=new AbortController();setLoading(true);setLoadError('');
+  loadAtlas(controller.signal).then(items=>{if(!controller.signal.aborted)setRecords(items);})
+   .catch(()=>{if(!controller.signal.aborted)setLoadError('地点数据暂时无法加载，请确认数据服务已启动后重试。');})
+   .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+  return()=>controller.abort();
+ },[reload]);
+ const {open,isMobile,openMobile,setOpen,setOpenMobile}=useSidebar();
  const panelOpen=isMobile?openMobile:open;
- const [selected,setSelected]=useState<string|null>(null),[collection,setCollection]=useState('new-settlement'),[scope,setScope]=useState<Scope>('exact'),[query,setQuery]=useState(''),[fit,setFit]=useState(0),[lines,setLines]=useState(true);
+ const [selected,setSelected]=useState<string|null>(null),[query,setQuery]=useState(''),[fit,setFit]=useState(0),[lines,setLines]=useState(true);
+ const [focusRequest,setFocusRequest]=useState<{id:string;sequence:number}|null>(null);
+ const [connectionMode,setConnectionMode]=useState<'text'|'vector'>('text');
+ const [minSimilarity,setMinSimilarity]=useState(0.60);
+ const [hoveredConnection,setHoveredConnection]=useState<{key:string;featureId:string}|null>(null);
+ const [relatedHeaderStuck,setRelatedHeaderStuck]=useState(false);
+ const [listLimit,setListLimit]=useState(100);
+ const sidebarRef=useRef<HTMLElement|null>(null);
+ const searchWrapRef=useRef<HTMLDivElement|null>(null);
+ const relatedHeaderRef=useRef<HTMLDivElement|null>(null);
+ const relatedListRef=useRef<HTMLDivElement|null>(null);
+ const searchInputRef=useRef<HTMLInputElement|null>(null);
+ const resetRelatedScroll=useRef(false);
+ useEffect(()=>setListLimit(100),[query,selected]);
+ function changeConnectionMode(value:'text'|'vector'){
+  if(value===connectionMode)return;
+  resetRelatedScroll.current=true;
+  setConnectionMode(value);
+ }
 
  const [searchResult,setSearchResult]=useState<SearchResponse|null>(null),[searching,setSearching]=useState(false);
- const cache=useRef(new Map<string,SearchResponse>());
- async function fetchSearch(text:string,range:Scope,signal?:AbortSignal){
-  const key=range+':'+text.trim();const cached=cache.current.get(key);if(cached)return cached;
-  const response=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:text,scope:range,limit:12}),signal});
-  if(!response.ok)throw Error('Search unavailable');const result=await response.json() as SearchResponse;
-  if(cache.current.size>40)cache.current.clear();cache.current.set(key,result);return result;
+ const [searchError,setSearchError]=useState(''),[searchRetry,setSearchRetry]=useState(0);
+ const [similarState,setSimilarState]=useState<{key:string;status:'loading'|'ready'|'error';result?:SimilarResponse|VectorSimilarResponse}|null>(null);
+ const [similarRetry,setSimilarRetry]=useState(0);
+ const mapRequest=useRef<AbortController|null>(null);
+ const [mapLookup,setMapLookup]=useState<{target:MapPlaceTarget;state:'loading'|'not_found'|'ambiguous'|'unsupported'|'error'}|null>(null);
+ useEffect(()=>()=>mapRequest.current?.abort(),[]);
+ function clearMapLookup(){mapRequest.current?.abort();setMapLookup(null);}
+ async function selectMapPlace(target:MapPlaceTarget){
+  mapRequest.current?.abort();const controller=new AbortController();mapRequest.current=controller;
+  setSelected(null);setQuery('');if(isMobile)setOpenMobile(false);
+  if(!target.osm&&!target.featureId){setMapLookup({target,state:'unsupported'});return;}
+  setMapLookup({target,state:'loading'});
+  try{
+   const result=target.osm?await resolveMapPlace(target.osm,controller.signal):{status:'matched',feature:await loadRecord(target.featureId!,controller.signal)};
+   if(controller.signal.aborted)return;
+   if(result.status!=='matched'||!result.feature){setMapLookup({target,state:result.status==='ambiguous'?'ambiguous':'not_found'});return;}
+   const record=result.feature;
+   setRecords(previous=>[...previous.filter(r=>r.feature_id!==record.feature_id),record]);
+   setSelected(record.feature_id);setMapLookup(null);
+   revealRelated();
+  }catch{if(!controller.signal.aborted)setMapLookup({target,state:'error'});}
+ }
+ async function fetchSearch(text:string,signal?:AbortSignal){
+  const result=await searchAtlas(text.trim(),'near',signal);
+  // ES may contain a record imported after the map's initial load.
+  const missing=result.results.filter(hit=>!records.some(r=>r.feature_id===hit.feature_id));
+  if(missing.length){const extra=await Promise.all(missing.map(hit=>loadRecord(hit.feature_id,signal)));if(!signal?.aborted)setRecords(previous=>[...previous,...extra.filter(r=>!previous.some(p=>p.feature_id===r.feature_id))]);}
+  return result;
  }
  useEffect(()=>{
-  if(!query.trim()){setSearchResult(null);setSearching(false);return;}
+  setSearchError('');setSearchResult(null);
+  if(!query.trim()||loading||loadError){setSearching(false);return;}
   const controller=new AbortController();setSearching(true);
-  const timer=setTimeout(()=>{fetchSearch(query.trim(),scope,controller.signal).then(result=>{if(!controller.signal.aborted)setSearchResult(result);}).catch(()=>{if(!controller.signal.aborted)setSearchResult({...conceptSearch(query.trim(),scope),notice:'连接暂时不可用，已使用本地概念匹配。'});}).finally(()=>{if(!controller.signal.aborted)setSearching(false);});},250);
+  const timer=setTimeout(()=>{fetchSearch(query.trim(),controller.signal).then(result=>{if(!controller.signal.aborted)setSearchResult(result);}).catch(()=>{if(!controller.signal.aborted)setSearchError('搜索服务暂时无法连接，请稍后重试。');}).finally(()=>{if(!controller.signal.aborted)setSearching(false);});},250);
   return()=>{clearTimeout(timer);controller.abort();};
- },[query,scope]);
- const current=records.find(r=>r.id===selected);
+ },[query,loading,loadError,searchRetry]);
+ const current=records.find(r=>r.feature_id===selected);
+ useEffect(()=>{
+  const sidebar=sidebarRef.current,header=relatedHeaderRef.current;
+  if(!current||!sidebar||!header){setRelatedHeaderStuck(false);return;}
+  const update=()=>{
+   const stickyTop=parseFloat(getComputedStyle(header).top)||0;
+   setRelatedHeaderStuck(sidebar.scrollTop>0&&header.getBoundingClientRect().top-sidebar.getBoundingClientRect().top<=stickyTop+1);
+  };
+  update();
+  sidebar.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update);
+  return()=>{sidebar.removeEventListener('scroll',update);window.removeEventListener('resize',update);};
+ },[current?.feature_id]);
+ const similarSelected=!!current&&hasLiteralMeaning(current);
+ const similarKey=selected&&similarSelected?`${selected}|${locale}|${connectionMode}|${connectionMode==='vector'?minSimilarity.toFixed(2):''}|${similarRetry}`:null;
+ const similarContext=selected&&similarSelected?`${selected}|${locale}|${connectionMode}|`:null;
+ useEffect(()=>{
+  if(!selected||!similarSelected||loading||loadError||!similarKey)return;
+  const controller=new AbortController();
+  queueMicrotask(()=>{if(!controller.signal.aborted)setSimilarState(previous=>({key:similarKey,status:'loading',result:previous?.key.startsWith(`${selected}|${locale}|${connectionMode}|`)?previous.result:undefined}));});
+  const timer=setTimeout(()=>{
+   const request=connectionMode==='vector'?vectorSimilarPlaces(selected,locale,minSimilarity,controller.signal):similarPlaces(selected,locale,controller.signal);
+   request.then(result=>{
+    if(controller.signal.aborted)return;
+    setSimilarState({key:similarKey,status:'ready',result});
+    setRecords(previous=>{
+     const missing=result.results.map(hit=>hit.feature).filter(r=>!previous.some(p=>p.feature_id===r.feature_id));
+     return missing.length?[...previous,...missing]:previous;
+    });
+   }).catch(()=>{if(!controller.signal.aborted)setSimilarState(previous=>({key:similarKey,status:'error',result:previous?.key===similarKey?previous.result:undefined}));});
+  },connectionMode==='vector'?200:0);
+  return()=>{clearTimeout(timer);controller.abort();};
+ },[selected,similarSelected,locale,loading,loadError,similarKey,connectionMode,minSimilarity]);
+ const activeSimilar=similarState?.result&&similarContext&&similarState.key.startsWith(similarContext)?similarState.result:null;
+ const relatedHits=activeSimilar?.results||[];
+ const highlightedConnection=hoveredConnection?.key===similarKey&&relatedHits.some(hit=>hit.feature.feature_id===hoveredConnection.featureId)?hoveredConnection.featureId:null;
+ const vectorUnavailable=connectionMode==='vector'&&activeSimilar&&'available' in activeSimilar&&!activeSimilar.available;
+ const similarError=!!similarKey&&similarState?.key===similarKey&&similarState.status==='error';
+ const similarLoading=!!similarKey&&!loading&&!loadError&&(similarState?.key!==similarKey||similarState.status==='loading');
+ useEffect(()=>{
+  if(!resetRelatedScroll.current)return;
+  resetRelatedScroll.current=false;
+  const frame=requestAnimationFrame(()=>{
+   const sidebar=sidebarRef.current,search=searchWrapRef.current,header=relatedHeaderRef.current,list=relatedListRef.current;
+   if(!sidebar||!search||!header||!list)return;
+   sidebar.scrollTop=Math.max(0,sidebar.scrollTop+list.getBoundingClientRect().top-sidebar.getBoundingClientRect().top-search.offsetHeight-header.offsetHeight);
+  });
+  return()=>cancelAnimationFrame(frame);
+ },[connectionMode]);
  const visible=useMemo(()=>{
-  if(query.trim())return searchResult?.query===query.trim()&&searchResult.scope===scope?searchResult.results.map(hit=>records.find(r=>r.id===hit.analysis_id)).filter((r):r is typeof records[number]=>!!r):[];
-  if(current)return relatedTo(current,scope);
-  return collectionRecords(collection,scope);
- },[query,searchResult,current,scope,collection]);
- function select(id:string){const record=records.find(r=>r.id===id);if(!record)return;setSelected(id);setCollection(primaryCollection(record));setQuery('');if(isMobile)setOpenMobile(false);}
- function explore(id:string){setCollection(id);setScope(id==='centrality'||id==='newness'?'theme':'exact');setSelected(null);setQuery('');if(isMobile)setOpenMobile(false);}
+  if(query.trim())return searchResult?.query===query.trim()&&searchResult.scope==='near'?searchResult.results.map(hit=>records.find(r=>r.feature_id===hit.feature_id)).filter((r):r is typeof records[number]=>!!r):[];
+  if(current)return [current,...(activeSimilar?.results.map(hit=>hit.feature)||[])];
+  return [];
+ },[query,searchResult,current,activeSimilar,records]);
+ function revealRelated(){if(isMobile)setOpenMobile(true);else setOpen(true);}
+ function collapsePanel(){if(isMobile)setOpenMobile(false);else setOpen(false);}
+ function openSearch(){if(isMobile)setOpenMobile(true);else setOpen(true);requestAnimationFrame(()=>searchInputRef.current?.focus());}
+ function closeSearch(){flushSync(()=>setQuery(''));collapsePanel();}
+ function select(id:string){clearMapLookup();const record=records.find(r=>r.feature_id===id);if(!record)return;setSelected(id);setFocusRequest(previous=>({id,sequence:(previous?.sequence??0)+1}));setQuery('');revealRelated();}
+ function backToExplore(){clearMapLookup();setSelected(null);closeSearch();}
+ function closeSelected(){clearMapLookup();setSelected(null);setQuery('');collapsePanel();}
  useEffect(()=>{
   const context=(document as any).modelContext;if(!context?.registerTool)return;
   const lifecycle=new AbortController();
   const tools=[{
-   name:'select_place',title:'查看地点词源',description:'在地图中选中一个已收录地点，显示词源与关联图钉。',
-   inputSchema:{type:'object',properties:{place_id:{type:'string'},scope:{type:'string',enum:['exact','near','theme']}},required:['place_id'],additionalProperties:false},annotations:{readOnlyHint:false},
-   execute(input:any){const record=records.find(r=>r.place.id===input?.place_id);if(!record)throw Error('Unknown place_id');const range=input.scope||'exact';if(!['exact','near','theme'].includes(range))throw Error('Invalid scope');flushSync(()=>{setSelected(record.id);setCollection(primaryCollection(record));setQuery('');setScope(range);});return {place_id:record.place.id,analysis_id:record.id,related_places:relatedTo(record,range).map(r=>r.place.id)};}
+   name:'select_place',title:'查看地名字面含义',description:'在地图中选中一个已收录地点，显示字面含义与关联图钉。',
+   inputSchema:{type:'object',properties:{feature_id:{type:'string'}},required:['feature_id'],additionalProperties:false},annotations:{readOnlyHint:false},
+   execute(input:any){const record=records.find(r=>r.feature_id===input?.feature_id);if(!record)throw Error('Unknown feature_id');clearMapLookup();flushSync(()=>{setSelected(record.feature_id);setQuery('');});revealRelated();return {feature_id:record.feature_id};}
   },{
    name:'search_meanings',title:'搜索地名与含义',description:'通过同一搜索接口查找地点名称或语义概念，并更新地图与可见结果。',
-   inputSchema:{type:'object',properties:{query:{type:'string',minLength:1,maxLength:200},scope:{type:'string',enum:['exact','near','theme']}},required:['query'],additionalProperties:false},annotations:{readOnlyHint:false},
-   async execute(input:any){if(typeof input?.query!=='string'||!input.query.trim()||input.query.length>200)throw Error('Invalid query');const range=input.scope||'near';if(!['exact','near','theme'].includes(range))throw Error('Invalid scope');const result=await fetchSearch(input.query.trim(),range);flushSync(()=>{setQuery(input.query.trim());setSelected(null);setScope(range);setSearchResult(result);setSearching(false);});return {engine:result.engine,results:result.results};}
+   inputSchema:{type:'object',properties:{query:{type:'string',minLength:1,maxLength:200}},required:['query'],additionalProperties:false},annotations:{readOnlyHint:false},
+   async execute(input:any){if(typeof input?.query!=='string'||!input.query.trim()||input.query.length>200)throw Error('Invalid query');const result=await fetchSearch(input.query.trim());clearMapLookup();flushSync(()=>{setQuery(input.query.trim());setSelected(null);setSearchResult(result);setSearching(false);});return {engine:result.engine,results:result.results};}
   }];
   for(const tool of tools){try{Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}}
   return()=>lifecycle.abort();
- },[]);
- const label=query?`“${query}”`:current?.meaning?.label.en||collections.find(c=>c.id===collection)?.label||'All names';
- return <main className="atlas-app" data-panel-open={panelOpen}><form className="floating-search" onSubmit={e=>{e.preventDefault();setQuery(query.trim());}} role="search"><SidebarTrigger type="button" aria-label={panelOpen?'收起侧栏':'展开侧栏'} title={panelOpen?'收起侧栏':'展开侧栏'} aria-expanded={panelOpen} aria-controls="meaning-sidebar"/><Input aria-label="搜索地名或含义" value={query} maxLength={200} onChange={e=>{setQuery(e.target.value);setSelected(null);}} placeholder="搜索地名或含义"/>{query&&<Button variant="ghost" type="button" aria-label="清空搜索" onClick={()=>setQuery('')}><X size={19}/></Button>}<Button variant="ghost" type="submit" aria-label="搜索"><Search size={23}/></Button></form>
- <div className="workspace"><Sidebar collapsible="offcanvas" className="atlas-sidebar-shell"><aside id="meaning-sidebar" className="sidebar" aria-label="含义探索" inert={!isMobile&&!open}><div className="mobile-sidebar-heading"><span>含义探索</span><SidebarTrigger type="button" aria-label="收起侧栏" title="收起侧栏" aria-expanded={panelOpen}/></div><div className="intro"><span className="eyebrow">AN ATLAS OF ETYMOLOGIES</span><h1>The world has<br/> fewer names<br/> than you think<span>.</span></h1><p>名字不同，意思也许相同。<br/>发现地名背后的意外联系。</p></div><div className="section-heading"><h2>Explore by meaning</h2><span>含义探索</span></div><div className="collections">{collections.map(c=><Button variant="ghost" key={c.id} className={`collection ${collection===c.id&&!query?'active':''}`} onClick={()=>explore(c.id)}><span className="collection-symbol" style={{color:c.color}}>{c.symbol}</span><span><strong>{c.label}</strong><small>{c.zh}</small></span><span className="count">{collectionRecords(c.id,c.id===collection?scope:(c.id==='centrality'||c.id==='newness'?'theme':'exact')).length}</span></Button>)}</div><div className="result-heading"><span>{query?'搜索结果':'当前探索'}</span><Button variant="ghost" onClick={()=>explore('all')}>全部 {records.length} 个地点 <ArrowUpRight size={13}/></Button></div>{query&&<div className="search-status" role="status">{searching?'正在查找相关含义…':searchResult?.notice||(searchResult?.engine==='hybrid-vector'?'名称 + 向量语义匹配':'名称 + 已收录概念匹配')}</div>}<div className="place-list" aria-live="polite">{visible.length?visible.map((r,i)=><Button variant="ghost" key={r.id} className={`place-row ${selected===r.id?'chosen':''}`} onClick={()=>select(r.id)}><span className="place-index">{String(i+1).padStart(2,'0')}</span><span><strong>{r.place.display_name.en}</strong><small>{r.place.display_name.zh} · {countryNames[r.place.country_code]}</small>{query&&<span className="match-reason">{searchResult?.results.find(h=>h.analysis_id===r.id)?.reason}</span>}{!query&&current&&current.id!==r.id&&<span className="match-reason">{relationLabel(current,r)}</span>}</span><ArrowUpRight size={15}/></Button>):<div className="empty-results"><Search size={24}/><strong>{searching?'正在探索名字的含义…':'还没有找到相关名字'}</strong><p>试试「新的定居点」「首都」或「Naples」。当前使用已收录的语义概念，尚未覆盖所有自由表达。</p></div>}</div><div className="sidebar-footer"><span>✦</span> 12 个地点，一份不断生长的词源地图。<small className="data-credit">词源资料：Wiktionary contributors · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a></small></div></aside></Sidebar>
- <section className="map-stage" aria-label="地图探索"><MapView all={records} visible={visible} selected={selected} onSelect={select} fit={fit} lines={lines&&scope!=='theme'}/><div className="map-context"><span className="map-context-icon"><Compass size={20}/></span><div><small>正在探索</small><strong>{label}</strong></div><span className="map-result-count">{visible.length} 个地点</span></div><ToggleGroup type="single" value={scope} onValueChange={value=>{if(value)setScope(value as Scope);}} className="scope-controls" aria-label="语义匹配范围">{([['exact','同义'],['near','相近'],['theme','主题']] as const).map(([value,text])=><ToggleGroupItem key={value} value={value} disabled={!current&&!query&&(collection==='centrality'||collection==='newness')&&value!=='theme'} aria-label={text} className={scope===value?'selected':''}>{text}</ToggleGroupItem>)}</ToggleGroup><div className="map-tools"><Button variant="ghost" onClick={()=>setFit(n=>n+1)} title="查看全部关联地点" aria-label="查看全部关联地点"><Maximize size={18}/></Button><Button variant="ghost" onClick={()=>setLines(v=>!v)} aria-pressed={lines&&scope!=='theme'} disabled={scope==='theme'} title={scope==='theme'?'主题关联不绘制连线':'显示语义连线'} aria-label="显示语义连线" className={lines?'pressed':''}><Link2 size={18}/></Button></div><div className="map-legend"><span><i className="legend-pin"/>当前含义</span><span><i className="legend-other"/>其他已收录地点</span><small>连线表示语义关系</small></div>
- {current&&<article className="detail-card" aria-label={`${current.place.display_name.en} 词源详情`}><div className="detail-topline"><span>{current.place.kind==='ancient_city'?'古城':current.place.kind==='country'?'国家':'城市'} / {countryNames[current.place.country_code]}</span><Button variant="ghost" aria-label="关闭地点详情" onClick={()=>setSelected(null)}><X size={17}/></Button></div><h2>{current.place.display_name.en}</h2><p className="local-name">{current.place.display_name.zh} <span>· {current.name.form}</span></p><div className="meaning-block"><span>LITERALLY</span><h3>“{current.analysis.literal_translation.en}”</h3><p>{current.analysis.literal_translation.zh}</p></div><div className="etymon"><span>{current.analysis.etymon?'词源形式':'被分析的名称'}</span><strong dir="auto">{current.analysis.etymon?.form||current.name.form}</strong><small>{current.analysis.etymon?.romanization||current.name.romanization} · {current.analysis.etymon?.language||current.name.language}</small></div>{!!current.analysis.segments.length&&<div className="segments">{current.analysis.segments.map((s,i)=><span key={i}>{i>0&&<b>+</b>}<span><strong dir="auto">{s.form}</strong><small>{s.gloss_en}</small></span></span>)}</div>}<div className="evidence"><Check size={14}/><span>有词源出处 · 待复核</span></div><details><summary>查看解释与来源 <ArrowUpRight size={14}/></summary><p>{current.analysis.editorial_note_zh}</p>{current.analysis.source_ids.map(id=>{const source=data.sources.find(s=>s.id===id)!;return <a key={id} href={source.url} target="_blank" rel="noreferrer">{source.title}<ArrowUpRight size={13}/></a>;})}</details><div className="card-related"><Layers size={15}/>{visible.filter(r=>r.id!==current.id).length} 个关联地点<span>{scope==='exact'?'同义归一':scope==='near'?'相近含义':'共同主题'}</span></div></article>}{!current&&<div className="map-hint"><span>↖</span> 点击图钉，看看名字里藏着什么。</div>}</section></div></main>;
+ },[records]);
+ return <main className="atlas-app" data-panel-open={panelOpen} lang={locale}>
+  {!panelOpen&&<Button variant="ghost" className="map-search-launch" type="button" onClick={openSearch} aria-label={t('search')} aria-expanded={false} aria-controls="meaning-sidebar"><span className="map-search-launch-icon"><PanelLeft size={19} aria-hidden="true"/></span><span className="map-search-launch-label">{query||(current?nameOf(current):t('search'))}</span><span className="map-search-launch-icon"><Search size={20} aria-hidden="true"/></span></Button>}
+  <LanguageSwitcher/>
+  <div className="workspace">
+   <Sidebar collapsible="offcanvas" className="atlas-sidebar-shell"><aside ref={sidebarRef} id="meaning-sidebar" className="sidebar" aria-label={t('explore')} inert={!isMobile&&!open}>
+    <div ref={searchWrapRef} className="sidebar-search-wrap"><form className="sidebar-search" onSubmit={e=>{e.preventDefault();setQuery(query.trim());}} role="search">
+     {current?<Button variant="ghost" type="button" aria-label={relatedText.back} title={relatedText.back} onClick={backToExplore}><ChevronLeft size={20}/></Button>
+      :<SidebarTrigger type="button" aria-label={t('close')} title={t('close')} aria-expanded={panelOpen} aria-controls="meaning-sidebar"/>}
+     <Input ref={searchInputRef} aria-label={t('search')} value={query} maxLength={200} onChange={e=>{clearMapLookup();const value=e.target.value;setQuery(value);setSelected(null);if(!value.trim())closeSearch();}} placeholder={current?nameOf(current):t('search')}/>
+     <Button variant="ghost" type="submit" aria-label={t('submit')}><Search size={20}/></Button>
+     {(query||current)&&<Button variant="ghost" type="button" aria-label={current?t('closeDetail'):t('clear')} onClick={current?closeSelected:closeSearch}><X size={19}/></Button>}
+    </form></div>
+    {current?<>
+     <div className="place-hero" aria-hidden="true"/>
+     <PlaceDetail record={current}/>
+     <div ref={relatedHeaderRef} className={`related-results-header${relatedHeaderStuck?' is-stuck':''}`}>
+      <div className="related-browser-tools">
+       <h3 className="related-browser-kicker">{t('related',{count:relatedHits.length})}</h3>
+       <fieldset className="related-mode-switch">
+        <legend className="sr-only">{vectorText.matchMode}</legend>
+        <label><input type="radio" name="connection-mode" value="text" checked={connectionMode==='text'} onChange={()=>changeConnectionMode('text')} aria-label={vectorText.textMatch}/><span>{vectorText.textShort}</span></label>
+        <label><input type="radio" name="connection-mode" value="vector" checked={connectionMode==='vector'} onChange={()=>changeConnectionMode('vector')} aria-label={vectorText.vectorMatch}/><span>{vectorText.vectorShort}</span></label>
+       </fieldset>
+      </div>
+      {connectionMode==='vector'&&<SimilarityThreshold label={vectorText.threshold} value={minSimilarity} onCommit={setMinSimilarity}/>}
+     </div>
+    </>:query.trim()?<div className="result-heading"><span>{t('results')}</span></div>:null}
+    {query&&<div className="search-status" role="status">{t(searching?'searching':searchError?'searchError':searchResult?.notice?'negative':'searchLabel')}
+     {searchError&&<Button variant="ghost" onClick={()=>setSearchRetry(n=>n+1)}>{t('retry')}</Button>}
+     {!!searchResult&&searchResult.total>searchResult.results.length&&<p>{t('searchTotal',{total:searchResult.total,shown:searchResult.results.length})}</p>}
+    </div>}
+    {similarSelected&&relatedHits.length>0&&(similarLoading||similarError||vectorUnavailable)&&<div className="search-status" role={similarError?'alert':'status'}>
+     {similarLoading?t('searching'):similarError?t('searchError'):vectorUnavailable?vectorText.noVector:t('empty')}
+     {similarError&&<Button variant="ghost" onClick={()=>setSimilarRetry(n=>n+1)}>{t('retry')}</Button>}
+    </div>}
+    {(current||query.trim()||loading||loadError)&&<div ref={relatedListRef} className={`place-list ${current?'related-place-list':''}`} aria-live="polite">{loading||loadError?<div className="empty-results" role={loadError?'alert':'status'}><strong>{t(loading?'loading':'loadError')}</strong>{loadError&&<Button variant="outline" onClick={()=>setReload(n=>n+1)}>{t('retry')}</Button>}</div>
+     :current?relatedHits.length?relatedHits.map(hit=>{
+      const r=hit.feature;
+      const meanings=relatedMeanings(hit,locale);
+      return <div key={r.feature_id} className="related-place-card" onMouseEnter={()=>setHoveredConnection({key:similarKey||'',featureId:r.feature_id})} onMouseLeave={()=>setHoveredConnection(null)} onFocusCapture={()=>setHoveredConnection({key:similarKey||'',featureId:r.feature_id})} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setHoveredConnection(null);}}>
+       <Button variant="ghost" className="related-place-main" data-kind={r.kind} onClick={()=>select(r.feature_id)}>
+        <span className="related-place-copy"><span className="related-place-name"><strong dir="auto">{nameOf(r)}</strong><small>{kindName(r.kind,locale)}</small></span>
+         <span className="related-meaning-list">{meanings.length?meanings.map((meaning,index)=><span className="related-meaning-row" key={index}>
+          <span className="related-meaning-text" dir="auto" lang={meaning.lang}>{meaning.text}</span>
+          {meaning.lang!==locale&&<small className="related-translation-language">{languageName(meaning.lang,locale)}</small>}
+         </span>):<span className="related-meaning-row">{t('noMeaning')}</span>}</span>
+         {connectionMode==='vector'&&<small className="related-score">{vectorText.score} {hit.score.toFixed(2)}</small>}
+        </span><ArrowUpRight size={15}/>
+       </Button>
+      </div>;
+     })
+      :<div className="empty-results" role={similarError?'alert':'status'}><strong>{similarLoading?t('searching'):similarError?t('searchError'):vectorUnavailable?vectorText.noVector:similarSelected?t('empty'):t('noMeaning')}</strong>{similarError&&<Button variant="outline" onClick={()=>setSimilarRetry(n=>n+1)}>{t('retry')}</Button>}</div>
+     :visible.length?visible.slice(0,listLimit).map((r,i)=><Button variant="ghost" key={r.feature_id} className={`place-row ${selected===r.feature_id?'chosen':''}`} onClick={()=>select(r.feature_id)}>
+      <span className="place-index">{String(i+1).padStart(2,'0')}</span><span><strong dir="auto">{nameOf(r)}</strong><small>{kindName(r.kind,locale)}</small>
+       {query&&<span className="match-reason">{t(searchResult?.results.find(h=>h.feature_id===r.feature_id)?.match_kind==='name'?'nameMatch':'meaningMatch')}</span>}
+      </span><ArrowUpRight size={15}/>
+     </Button>)
+     :<div className="empty-results"><Search size={24}/><strong>{t(searching?'searching':searchError?'searchError':'empty')}</strong><p>{t('hint')}</p></div>}
+    </div>}
+    {!loading&&!loadError&&!current&&!!query.trim()&&visible.length>listLimit&&<Button variant="ghost" onClick={()=>setListLimit(n=>n+100)}>{t('more',{shown:listLimit,total:visible.length})}</Button>}
+   </aside></Sidebar>
+   <section className="map-stage" aria-label={t('map')}>
+    <MapView all={records} visible={visible} selected={selected} focusRequest={focusRequest} onSelect={select} onMapPlace={selectMapPlace} onMapBackgroundClick={collapsePanel} fit={fit} lines={lines} highlightedConnection={lines?highlightedConnection:null}/>
+    <div className="map-tools"><Button variant="ghost" onClick={()=>setFit(n=>n+1)} title={t('fit')} aria-label={t('fit')}><Maximize size={18}/></Button><Button variant="ghost" onClick={()=>setLines(v=>!v)} aria-pressed={lines} title={t('lines')} aria-label={t('lines')} className={lines?'pressed':''}><Link2 size={18}/></Button></div>
+    {mapLookup&&<article className="detail-card" aria-label={t('lookup')} aria-busy={mapLookup.state==='loading'}>
+     <div className="detail-topline"><span>{t('lookup')}</span><Button variant="ghost" aria-label={t('closeDetail')} onClick={clearMapLookup}><X size={17}/></Button></div>
+     <h2 dir="auto">{mapLookup.target.name}</h2>
+     <p className="local-name" role={mapLookup.state==='error'?'alert':'status'}>{t(({loading:'lookupLoading',not_found:'notFound',ambiguous:'ambiguous',unsupported:'unsupported',error:'lookupError'} as const)[mapLookup.state])}</p>
+     {mapLookup.state==='error'&&<Button variant="outline" onClick={()=>selectMapPlace(mapLookup.target)}>{t('retry')}</Button>}
+    </article>}
+   </section>
+  </div>
+ </main>;
 }

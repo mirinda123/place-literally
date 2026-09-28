@@ -1,0 +1,21 @@
+This batch contains 50 distinct OSM city nodes across multiple African
+countries. Preserve INPUT_JSON.literal_name exactly, including its script and
+language tag. Explain this city, not a same-named city elsewhere. A modern
+official spelling does not establish the name's historical source language.
+
+Trace documented earlier forms and naming events. Relevant languages may
+include Arabic, Amharic, Berber languages, Swahili, Hausa, Yoruba, Igbo,
+Zulu, Xhosa, Malagasy, Somali, French, English, Portuguese, Dutch, and many
+others; check the specific place. Distinguish an Indigenous name from a
+colonial transfer, a personal or saint's name, a later official renaming, or a
+modern folk decomposition. Keep opaque personal, ethnic, and Indigenous stems
+as names unless a source supports a deeper lexical sense. Do not turn a
+geographic description or folklore into a proven name origin.
+
+Prefer municipal or national histories, scholarly toponymy, historical
+gazetteers, and dictionaries of the source language. Return one to three
+genuinely distinct supported interpretations with aligned zh/en/ja/fr/es
+translations. If no reliable lexical sense is established, return uncertain
+instead of a plausible-sounding gloss. Include checked source URLs and caveats
+in the English note; do not place "possibly" or similar qualifiers inside the
+translation strings.

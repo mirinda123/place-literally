@@ -1,0 +1,13 @@
+de
+du
+des
+le
+la
+les
+pays
+ville
+terre
+lieu
+# Article/preposition contractions, including those before riverside phrases.
+au
+aux

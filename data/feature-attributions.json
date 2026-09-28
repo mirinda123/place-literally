@@ -1,0 +1,233 @@
+{
+  "beijing-cn": {
+    "sources": [
+      {
+        "id": "src-beijing",
+        "title": "Wiktionary: Beijing",
+        "url": "https://en.wiktionary.org/wiki/Beijing",
+        "consulted_url": "https://en.wiktionary.org/wiki/Beijing",
+        "section": "Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary entry.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 252486621; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "belgorod-ru": {
+    "sources": [
+      {
+        "id": "src-belgorod",
+        "title": "Wiktionary: Белгород",
+        "url": "https://en.wiktionary.org/wiki/%D0%91%D0%B5%D0%BB%D0%B3%D0%BE%D1%80%D0%BE%D0%B4",
+        "consulted_url": "https://kaikki.org/dictionary/All%20languages%20combined/meaning/%D0%91/%D0%91%D0%B5/%D0%91%D0%B5%D0%BB%D0%B3%D0%BE%D1%80%D0%BE%D0%B4.html",
+        "section": "Russian > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 271190391; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "belgrade-rs": {
+    "sources": [
+      {
+        "id": "src-belgrade",
+        "title": "Wiktionary: Beograd",
+        "url": "https://en.wiktionary.org/wiki/Beograd",
+        "consulted_url": "https://kaikki.org/dictionary/All%20languages%20combined/meaning/B/Be/Beograd.html",
+        "section": "Serbo-Croatian > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 605714931; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "china-cn": {
+    "sources": [
+      {
+        "id": "src-china",
+        "title": "Wiktionary: 中國",
+        "url": "https://en.wiktionary.org/wiki/%E4%B8%AD%E5%9C%8B",
+        "consulted_url": "https://en.wiktionary.org/wiki/%E4%B8%AD%E5%9C%8B?FORM=LFACTRE",
+        "section": "Chinese > Etymology 1; compound characters; Middle Korean > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary entry.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 4243135821; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "kyoto-jp": {
+    "sources": [
+      {
+        "id": "src-kyoto",
+        "title": "Wiktionary: 京都",
+        "url": "https://en.wiktionary.org/wiki/%E4%BA%AC%E9%83%BD",
+        "consulted_url": "https://kaikki.org/dictionary/Japanese/meaning/%E4%BA%AC/%E4%BA%AC%E9%83%BD/%E4%BA%AC%E9%83%BD.html",
+        "section": "Japanese > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 5336811391; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "nanjing-cn": {
+    "sources": [
+      {
+        "id": "src-nanjing",
+        "title": "Wiktionary: Nanjing",
+        "url": "https://en.wiktionary.org/wiki/Nanjing",
+        "consulted_url": "https://en.wiktionary.org/wiki/Nanjing",
+        "section": "Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary entry.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 2440813811; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "naples-it": {
+    "sources": [
+      {
+        "id": "src-naples",
+        "title": "Wiktionary: Naples",
+        "url": "https://en.wiktionary.org/wiki/Naples",
+        "consulted_url": "https://kaikki.org/dictionary/French/meaning/N/Na/Naples.html",
+        "section": "French > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 4283395581; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "new-york-us": {
+    "sources": [
+      {
+        "id": "src-new-york",
+        "title": "Wiktionary: New York",
+        "url": "https://en.wiktionary.org/wiki/New_York",
+        "consulted_url": "https://en.wiktionary.org/wiki/New_York",
+        "section": "Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary entry.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 617854511; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "seoul-kr": {
+    "sources": [
+      {
+        "id": "src-seoul",
+        "title": "Wiktionary: Seoul",
+        "url": "https://en.wiktionary.org/wiki/Seoul",
+        "consulted_url": "https://kaikki.org/dictionary/All%20languages%20combined/meaning/S/Se/Seoul.html",
+        "section": "English > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 19123656311; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "tokyo-jp": {
+    "sources": [
+      {
+        "id": "src-tokyo",
+        "title": "Wiktionary: Tokyo",
+        "url": "https://en.wiktionary.org/wiki/Tokyo",
+        "consulted_url": "https://en.wiktionary.org/wiki/Tokyo",
+        "section": "Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary entry.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 2650186921; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  },
+  "veliky-novgorod-ru": {
+    "sources": [
+      {
+        "id": "src-novgorod",
+        "title": "Wiktionary: Новгород",
+        "url": "https://en.wiktionary.org/wiki/%D0%9D%D0%BE%D0%B2%D0%B3%D0%BE%D1%80%D0%BE%D0%B4",
+        "consulted_url": "https://kaikki.org/dictionary/Russian/meaning/%D0%9D/%D0%9D%D0%BE/%D0%9D%D0%BE%D0%B2%D0%B3%D0%BE%D1%80%D0%BE%D0%B4.html",
+        "section": "Russian > Etymology",
+        "accessed_on": "2026-09-19",
+        "revision_id": null,
+        "attribution": "Wiktionary contributors",
+        "content_license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "extraction_note": "Consulted Wiktionary data extracted by Wiktextract and served by Kaikki.",
+        "adaptation_note": "Short glosses selected and organized; Chinese translations and editorial notes drafted for this prototype."
+      }
+    ],
+    "coordinate_source": "OpenFreeMap / OpenMapTiles place feature 270175891; see data/map-anchors.json for the dated tile and ODbL attribution.",
+    "coordinate_status": "basemap_label_anchor",
+    "notice": "Literal translations adapted from the previous sourced seed; Chinese translations and groupings remain drafts."
+  }
+}

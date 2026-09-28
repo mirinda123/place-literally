@@ -1,0 +1,11 @@
+# English stop words are applied before stemming: city becomes citi afterwards.
+of
+the
+country
+city
+land
+place
+# Locative prepositions do not carry the feature's literal meaning.
+by
+beside
+near

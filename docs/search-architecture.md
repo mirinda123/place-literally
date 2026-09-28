@@ -1,57 +1,17 @@
-# 搜索选型：PostgreSQL + pgvector 优先
+# 当前搜索架构：单一 features-v10
 
-2026-09-19。结论针对 Literal Name Map 当前的数据结构和阶段，不是通用性能排名。
+当前范围是地名字面含义地图。应用只查询 Elasticsearch 的 features-v10 索引；每个地点一个文档，七个业务字段：feature_id、kind、names、location、literal_name、literal_meanings、meaning_id，以及可选 external_ids.osm（keyword 数组）。旧索引（含 v4）保留作回退。
 
-## 当前实现
+没有独立词源分析索引、语义目录索引、PostgreSQL 或向量数据库。字面含义的多语言翻译放在同一文档中，literal_name 标明正在解释哪个具体名称。没有释义时允许空值。
 
-- 地图：MapLibre GL JS；地理连线：Turf great-circle；底图：OpenFreeMap / OpenStreetMap 的在线矢量瓦片；缩小显示地球，放大到道路与建筑。Natural Earth 仅作断网时的简化备用底图。
-- UI：项目现有的 shadcn/ui（Radix primitives）Button、Input、ToggleGroup，Lucide 图标。没有自制地图引擎、分段选择键盘逻辑。
-- `/api/search`：Fuse.js 名称/别名/转写模糊匹配 + 中英语义概念与人工关系图谱。支持“新的定居点”“跟首都有关系的名字”“中心”等表达；不是已接通的大模型，也不理解任意句子。
-- 后端存储为随应用发布的版本化 JSON；没有安装数据库。12 个地点的种子包含来源和审核标记。
-- 可选向量通道：标准 embedding HTTP 接口 → 内存余弦检索 → RRF 排名融合。未提供模型凭据和生成向量时，明确使用概念检索，不伪造向量或置信度。
+Python 提供名称/含义搜索、实体详情、同义实体查询。中文名称使用配置的 CJK 分析器；nested 的 literal_meanings.translations.zh 使用 analysis-ik 的 ik_max_word 建索引、ik_smart 查询；英文含义使用不删除停用词的 English 分析器，日文含义使用 Kuromoji，其他语言沿用 standard。完整名称使用规范化 keyword 子字段。概念与主题匹配使用版本化 data/meaning-groups.json，最终候选仍由 ES 查询返回。v3 到 v4 可执行 `python -m backend.reindex_v4`；v4 到 v5 执行 `python -m backend.reindex_search_v5`；v5 到 v6 执行 `python -m backend.reindex_search_v6`；v6 到 v7 执行 `python -m backend.reindex_search_v7`；v7 到 v8 执行 `python -m backend.reindex_search_v8`，仅复制已有文档并更新查询专用分析器，不重新采集或翻译数据。v8 到 v9 执行 `python -m backend.reindex_embeddings_v9`，去掉误命名的空向量字段，改用 qwen3.7-text-embedding 字段。v9 到 v10 执行 `python -m backend.reindex_search_v10`，复制全文档和向量并更新查询专用停用词；v9 保留供回退。
 
-## 为什么选 pgvector，而不是现在上 ES
+批量导入全球城市后，名称通过 `copy_to` 汇总到内部 `search_names`（配置的 CJK 分析器，附规范化 `.raw` 子字段），检索不再展开 `names.*`。这是倒排索引辅助字段，不改变业务文档 `_source`。名称全文检索使用短语匹配，完整名称使用 `.raw`。地图使用 `/api/map-features` 游标分页读取轻量字段，完整多语言名称保留在详情与关联接口。
 
-| 方案 | 合适的地方 | 这里的取舍 |
-| --- | --- | --- |
-| 小规模内存索引 | 少量版本化记录，直接检索，容易部署 | 本次原型采用；需实测加载、内存与并发后决定升级 |
-| PostgreSQL + pgvector | 地点、名称、词源候选、来源、审核和关系同库存储；精确或近似向量检索 | 正式后端首选，避免先维护主数据库和额外搜索集群 |
-| Elasticsearch | 原生全文检索、语言分析与向量混合，支持 RRF | 当复杂分词、拼写、全文高亮和相关性调优成为核心需求时再评估 |
-| Qdrant | dense/sparse 混合、payload 筛选、多阶段向量检索 | 向量检索需要独立扩容时再评估；关系数据仍需有明确主存储 |
+前端使用 feature_id 对应地图坐标、搜索命中和字面含义卡片。点击任何有字面含义的地点时，前端仍调用 `/api/features/{feature_id}/similar?lang=zh`，其中 `lang` 是界面语言；没有任何释义的地点不发请求。后端按原始释义的列表项分别构造 ES nested 查询，对已提供的中、英、日、法、西释义分别用查询专用分析器执行 `match`（`operator=OR`、`minimum_should_match="2<-50%"`）。分词后不超过两个词须全部命中；更多词允许缺少一半（向下取整）；只剩一个词时 ES 最多要求命中一个。同一条候选释义至少命中其中两种语言才返回：ES 外层 `bool.minimum_should_match=2` 执行语言门槛，每种语言用 `constant_score` 记一票，响应中的 `score` 就是支持语言数。不同候选释义不能拼票，不同源释义也不会拼成一个含义；仅有一种翻译的源释义不会生成查询。当前界面语言没有翻译时，若该源释义仍有至少两种受支持语言，也可以查询；界面语言只影响显示。v10 的五语查询分析器按 `backend/stopwords/similar_*.txt` 过滤泛用国家称谓、城市类别词、土地词及「地方／place／場所／lieu／lugar」；日文在 Kuromoji 链后增加专用停用词过滤。v10 还过滤英语 by/beside/near、法语 au/aux、西语 al/junto 等位置连接词，保留「河／川／river／río」等实义词。词表建索引时嵌入 ES 设置，修改文本文件不会自动改变正在使用的索引。普通搜索仍使用原来的字段分析器。所有地点类型参与同一次检索，并排除所选地点；不以 meaning_id 加分，也不使用 Python 相对最高分门槛。PIT 与 search_after 取回全部命中结果及最佳的源／候选释义序号；响应中的 `threshold` 暂保留为 null 以兼容客户端。侧栏展示全部结果，地图用浅蓝色虚线地表弧线连接它们；河流、湖泊等类型使用代表点。`/api/features/{feature_id}/related` 仍提供基于 meaning_id 的严格同义兼容接口，但点选地点不再用它生成关联列表。首页含义分类和普通搜索保持原有逻辑。多语言投票会减少单语偶然命中，但诸如“都城／capital”等各语言共同的泛用词仍可能产生宽泛关联，需要结合真实地点继续评估。
 
-ES 本身支持向量检索，不能简单理解为“向量数据库负责语义，ES 只负责关键词”。对于本项目，更重要的是选择能方便维护词源来源、多个名称和审核关系的系统。[Elasticsearch 混合搜索](https://www.elastic.co/docs/solutions/search/hybrid-search)、[pgvector](https://github.com/pgvector/pgvector)、[Qdrant 混合查询](https://qdrant.tech/documentation/search/hybrid-queries/)
+数据和 CLI/API 说明见 [backend/README.md](../backend/README.md)。旧 TypeScript 搜索路由、示例搜索和 embedding 适配代码已删除。data/seed.json 仅保留为历史来源资料，不参与运行时读取。
 
-PostgreSQL 自带的全文配置不等于中文分词；把 `english` 换成 `simple` 也不会自动解决中文词边界。第一阶段用明确的别名/概念词典和多语言 embedding，后续再引入经过评估的中文分词。ES 有 Smart Chinese 插件，但增加一个 ES 服务也意味着索引同步和运维。[PostgreSQL parser](https://www.postgresql.org/docs/current/textsearch-parsers.html)、[Elastic Smart Chinese](https://www.elastic.co/docs/reference/elasticsearch/plugins/analysis-smartcn)
+features-v10 的每条 nested `literal_meanings` 释义中已预留 `embeddings_qwen3_7_text_embedding_512_v1`，其 `zh`、`en`、`ja`、`fr`、`es` 分别是 512 维、cosine 的 `dense_vector` 字段。718 个有字面释义的地点共有 990 条释义、4,938 个向量，已覆盖全部现有译文；另有 4 条旧示例释义缺少日／法／西译文，故相应的 12 个语言位置没有向量。补齐脚本和记录见 [向量说明](embedding-pilot.md)。前端默认「文本」继续使用 `/similar`；切到试验性的「向量」后调用 `/api/features/{feature_id}/vector-similar?lang=zh&min_similarity=0.60`。源地点的每条当前语言释义分别生成 `text_type=query` 向量，ES 用 nested `script_score` 精确计算同语言余弦，`min_score=1+min_similarity`，PIT 与 `search_after` 取回全部过门槛地点，再按地点保留最高得分与源／命中释义序号。接口不返回 512 维数组；源地点缺少当前语言向量时返回 `available=false`，不会回退文本搜索。前端滑杆可在 0.50–0.90 调整门槛并显示每个结果的原始余弦分数，高分仍需人工核实。覆盖扩大后仍需重新评估精确搜索延迟，再考虑近似 kNN。已有托管版本不随本地改动更新；部署新版需要可访问的 Python 后端及百炼密钥。
 
-## 检索策略
-
-1. 明确地名命中优先，保护短地名和专名。
-2. 使用直译、词素、规范含义和修饰概念检索。不要把地理位置或旅游介绍混入语义文本。
-3. 在相近/主题范围内，向量可以补充候选。原始含义保留，“北/南”“新/旧”“白/黑”不能被泛化成同义。
-4. 融合候选使用 RRF，不把 Fuse 分数或将来 BM25 分数直接加到 cosine 上。
-5. 搜索候选的相关性不等于词源可信度；地图的同义关系仍由审核后的分析记录决定。
-
-当前概念检索对否定条件会明确提示不支持；不会把“不要首都”按“首都”返回。尚未收录水相关词义时，搜索水不会返回沿海地点。
-
-## 接通 embedding 通道
-
-在未提交的 `.env.local` 中设置 `EMBEDDING_URL`、`EMBEDDING_MODEL` 和需要时的 `EMBEDDING_API_KEY`，然后：
-
-```sh
-npm run embeddings:generate
-npm run dev
-```
-
-接口采用 POST `{model,input:[text],encoding_format:"float"}`；返回 `{data:[{index,embedding}]}`。需使用文档和查询可直接共用的模型处理格式。需要特定 query/passage 前缀的模型（如 E5）不能直接套用当前通用适配器，应先把该模型的预处理规则同时加入生成脚本和查询实现，并增加模型版本校验。
-
-生成脚本按整个批次校验维度、数量和顺序后才替换索引。应用验证索引的数据版本和模型名；模型调用失败会回退概念检索，并在页面显示提示。`SEMANTIC_MIN_SCORE` 只是待评估的召回门槛，不是置信度。默认未接通外部模型，因此没有发生模型 API 计费调用。
-
-托管版本需通过托管平台配置服务端环境变量；本地 `.env.local` 不会发布。公开提供收费模型接口前应在部署平台加限流/额度控制。当前 Sites 部署保持所有者私有。
-
-## 后续迁移契约
-
-保留前端消费的 `analysis_id`、`place_id`、`reason`、`matched_concepts`、`kind` 字段。把向量检索实现从内存替换为 pgvector，不改变地图。
-
-建议关系表包括 `places`、`names`、`analyses`、`sources`、`analysis_sources`、`meaning_groups`、`cluster_memberships`；向量记录绑定 `analysis_id + model_version + data_version`。确定模型维度后再创建对应的 vector 列和索引。不要为了演示先锁死未知模型的维度。
-
-等数据、国家/类型过滤和真实查询稳定后，用同一套中英文评估问题比较召回、错误关联、过滤后的结果、启动时间和并发延迟，再决定 HNSW 或其他搜索引擎。不采用未经测试的“超过 N 条必须换 ES”规则。
+底图 place 标签点击通过提供方专属 ID 解码得到 node/way/relation 标识，调用 /api/features/resolve，精确查询 external_ids.osm。无匹配和身份冲突分别展示状态，服务异常可重试；不使用模糊名称匹配。现有示例的映射也存入 ES，锚点 JSON 不再决定运行时关联。

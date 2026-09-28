@@ -1,0 +1,116 @@
+{
+  "meanings": {
+    "northern-capital": {
+      "concept_ids": [
+        "north",
+        "capital"
+      ],
+      "cluster_ids": [
+        "capital-family",
+        "centrality",
+        "settlements"
+      ],
+      "labels": {
+        "en": "Northern Capital",
+        "zh": "北方的都城"
+      }
+    },
+    "white-city": {
+      "concept_ids": [
+        "white",
+        "settlement"
+      ],
+      "cluster_ids": [
+        "white-settlement",
+        "settlements"
+      ],
+      "labels": {
+        "en": "White City",
+        "zh": "白城"
+      }
+    },
+    "new-city": {
+      "concept_ids": [
+        "new",
+        "settlement"
+      ],
+      "cluster_ids": [
+        "new-settlement",
+        "newness",
+        "settlements"
+      ],
+      "labels": {
+        "en": "New City / New Town",
+        "zh": "新城"
+      }
+    },
+    "central-country": {
+      "concept_ids": [
+        "central",
+        "country"
+      ],
+      "cluster_ids": [
+        "centrality"
+      ],
+      "labels": {
+        "en": "Central Country / State",
+        "zh": "中央之国"
+      }
+    },
+    "capital": {
+      "concept_ids": [
+        "capital"
+      ],
+      "cluster_ids": [
+        "capital-family",
+        "centrality",
+        "settlements"
+      ],
+      "labels": {
+        "en": "Capital",
+        "zh": "都城"
+      }
+    },
+    "southern-capital": {
+      "concept_ids": [
+        "south",
+        "capital"
+      ],
+      "cluster_ids": [
+        "capital-family",
+        "centrality",
+        "settlements"
+      ],
+      "labels": {
+        "en": "Southern Capital",
+        "zh": "南方的都城"
+      }
+    },
+    "eastern-capital": {
+      "concept_ids": [
+        "east",
+        "capital"
+      ],
+      "cluster_ids": [
+        "capital-family",
+        "centrality",
+        "settlements"
+      ],
+      "labels": {
+        "en": "Eastern Capital",
+        "zh": "东方的都城"
+      }
+    }
+  },
+  "overrides": {
+    "new-york-us": {
+      "concept_ids": [
+        "new",
+        "proper-name"
+      ],
+      "cluster_ids": [
+        "newness"
+      ]
+    }
+  }
+}

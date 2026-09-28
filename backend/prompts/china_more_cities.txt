@@ -1,0 +1,18 @@
+This batch covers 50 named OSM city nodes in mainland China and Taiwan. Explain
+the name of THAT location, not a similarly spelled city or district elsewhere.
+
+literal_name.text MUST exactly equal the existing INPUT_JSON.literal_name,
+including its language tag and any final 市. Preserve the traditional spelling
+of the New Taipei original; do not silently normalize it to simplified Chinese.
+Do not replace the original with a shortened core name even if that core is what
+you explain in the translations.
+
+Trace names transferred from an older town, river, mountain, person, or other
+namesake only as far as credible evidence permits. Do not infer a historical
+naming motive merely from modern Chinese characters. Check the source-language
+meaning where a name is borrowed or transcribed. Distinct interpretations
+should be separate aligned meanings only if each is supported; otherwise
+return uncertain. Do not invent an explanation to fill an uncertain entry.
+
+Keep zh, en, ja, fr and es in the same interpretation order. Cite only sources
+actually checked in the English note.

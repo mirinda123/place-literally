@@ -1,0 +1,6 @@
+# Preserve Kuromoji's built-in Japanese stop list, then omit generic city words.
+_japanese_
+都市
+街
+土地
+場所

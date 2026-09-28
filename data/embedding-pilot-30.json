@@ -1,0 +1,36 @@
+{
+  "countries": [
+    "osm-node-26847706",
+    "osm-node-249399280",
+    "osm-node-424315584",
+    "osm-node-26847709",
+    "osm-node-424313734",
+    "osm-node-424311353",
+    "osm-node-432424968",
+    "osm-node-424316018",
+    "osm-node-2163914205",
+    "osm-node-432424981",
+    "osm-node-424313836",
+    "osm-node-424314784",
+    "osm-node-424314145",
+    "osm-node-1420871007",
+    "osm-node-424297647"
+  ],
+  "cities": [
+    "osm-node-151364049",
+    "osm-node-268396336",
+    "osm-node-240109189",
+    "osm-node-244077729",
+    "osm-node-153388690",
+    "osm-node-13707878",
+    "osm-node-3473474851",
+    "osm-node-61753360",
+    "osm-node-244080443",
+    "osm-node-1882099475",
+    "osm-node-640003455",
+    "kyoto-jp",
+    "osm-node-21068295",
+    "osm-node-1686293227",
+    "osm-node-72959652"
+  ]
+}

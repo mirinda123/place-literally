@@ -1,0 +1,5 @@
+This batch covers the 50 US states, each identified by a unique OSM place=state label node. Explain the locally used state name, not another place with the same spelling. Return literal_name.text as exactly the supplied names.en value with lang=en; do not abbreviate it or add/remove "State of" unless that exact spelling is present in names.en.
+
+Trace documented earlier language forms, named people, peoples, rivers, or transferred place names when they establish a credible lexical sense. Many US state names come from Indigenous languages: prefer tribal sources, scholarly place-name studies, state historical institutions, or other reliable sources, and distinguish the original word from later folk explanations. Do not guess a dictionary meaning from a phonetic resemblance. If credible sources disagree on genuinely distinct readings, use separate meaning items and explain uncertainty in the English note. If a name has no credibly recoverable lexical meaning, return uncertain rather than inventing one.
+
+Keep all five target languages aligned, concise, and free of filler such as "may mean" or "another meaning". Cite URLs you actually checked in the note.

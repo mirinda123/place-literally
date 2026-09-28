@@ -1,0 +1,19 @@
+This review batch contains Chinese province names formed by joining the first
+characters of older place names. Preserve the attested naming relationship.
+For these four names, the publishable meaning should identify the two source
+places, not translate the isolated characters as if they were chosen to form
+a descriptive phrase. Return one interpretation unless a distinct historical
+naming derivation is actually documented. Do not create alternatives from
+multiple dictionary senses of a character in a source city's name.
+
+安徽省: 安庆府 + 徽州府 -> a province named from Anqing and Huizhou.
+江苏省: 江宁府 + 苏州府 -> a province named from Jiangning and Suzhou.
+福建省: 福州 + 建州 -> a province named from Fuzhou and Jianzhou.
+甘肃省: 甘州 + 肃州 -> a province named from Ganzhou and Suzhou (the historical
+Suzhou near Jiuquan, not the modern city in Jiangsu).
+
+Primary leads to verify rather than cite blindly:
+https://www.zhongguoguoqing.cn/zsgq/xfz/201907/t20190717_5037748.shtml
+https://en.jiangsu.gov.cn/col/col88905/index.html
+https://www.fujian.gov.cn/zwgk/ztzl/sxzygwzxsgzx/flsxkmh/202603/t20260302_7103283.htm
+https://www.gsdfszw.org.cn/gssz/del/gsszgs/201905/P020190516358936425505.pdf

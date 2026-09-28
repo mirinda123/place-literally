@@ -3,8 +3,8 @@
 - MapLibre GL JS: BSD-3-Clause, https://github.com/maplibre/maplibre-gl-js
 - shadcn/ui and Radix primitives: MIT, https://github.com/shadcn-ui/ui and https://github.com/radix-ui/primitives
 - Turf: MIT, https://github.com/Turfjs/turf
-- Fuse.js: Apache-2.0, https://github.com/krisk/Fuse
 - Lucide: ISC, https://github.com/lucide-icons/lucide
+- Material Symbols Outlined (four place-type icons): Apache-2.0, https://github.com/google/material-design-icons; license in `public/material-symbols/LICENSE`.
 - Other packages retain the notices included in their distributions and lockfile dependencies.
 
 ## Natural Earth
@@ -22,7 +22,7 @@ Wiktionary contributors, CC BY-SA 4.0: https://creativecommons.org/licenses/by-s
 
 Changes: extracted/condensed etymological accounts, Chinese/English glosses, normalized meanings, segmentation and editorial grouping. These are provisional adaptations awaiting review. Derivative etymology data must retain attribution and share-alike terms; the application MIT license does not override these terms.
 
-The ancient Carthage coordinate remains a manually entered demonstration point. The other 11 coordinates and place-label bindings in `data/map-anchors.json` (also used by `data/seed.json`) are extracted from OpenFreeMap / OpenMapTiles place features, © OpenStreetMap contributors, under ODbL 1.0. Each binding records its dated tile URL, feature ID and verification date. These geographic fields retain their ODbL attribution separately from the CC BY-SA etymology content. No map tiles are bundled.
+The unlinked ancient Carthage demonstration point has been removed from the current dataset. The 11 active coordinates and place-label bindings in `data/map-anchors.json` (also used by `data/seed.json`) are extracted from OpenFreeMap / OpenMapTiles place features, © OpenStreetMap contributors, under ODbL 1.0. Each binding records its dated tile URL, feature ID and verification date. These geographic fields retain their ODbL attribution separately from the CC BY-SA etymology content. No map tiles are bundled.
 
 ## Online street basemap
 

@@ -1,0 +1,26 @@
+{
+  "countries": [
+    "china-cn",
+    "osm-node-1363947712",
+    "osm-node-1683325355",
+    "osm-node-249399362",
+    "osm-node-424312026",
+    "osm-node-424313451",
+    "osm-node-424313760",
+    "osm-node-424317039",
+    "osm-node-424317935",
+    "osm-node-9286798510"
+  ],
+  "cities": [
+    "beijing-cn",
+    "nanjing-cn",
+    "new-york-us",
+    "osm-node-107775",
+    "osm-node-1147314253",
+    "osm-node-151538698",
+    "osm-node-17807753",
+    "osm-node-26506087",
+    "osm-node-569005393",
+    "osm-node-57563779"
+  ]
+}

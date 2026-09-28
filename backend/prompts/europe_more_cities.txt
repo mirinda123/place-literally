@@ -1,0 +1,19 @@
+This batch covers 50 European city-centre OSM nodes not in the earlier Europe
+and UK batches. Each input has a locally attested literal_name already pinned.
+Preserve its exact text and language tag, including diacritics and non-Latin
+script. Explain that selected name, not an English exonym or a namesake elsewhere.
+
+Trace documented historical forms and language changes to a credible lexical
+sense. A transferred name may come from a person, river, people, or older
+place; keep the proper name if its deeper root is not established. Do not
+assume a lookalike modern word proves the name's origin. For multilingual
+places, do not silently switch to another official language. Distinguish
+attested derivations from folk etymology and foundation legends.
+
+Use reliable linguistic or historical sources, such as scholarly place-name
+studies, municipal archives, and source-language dictionaries. Distinct,
+well-supported readings may be separate meaning items, with their dispute
+explained in the English note. If no lexical sense can be recovered credibly,
+return uncertain rather than invent one. Keep zh/en/ja/fr/es aligned and free
+of filler such as "possibly means" or "another interpretation". Cite only
+URLs actually checked.

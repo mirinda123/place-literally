@@ -1,0 +1,21 @@
+This batch contains 40 distinct OSM city nodes across the 12 sovereign
+South American countries. Preserve INPUT_JSON.literal_name exactly, including
+its spelling and language tag. Explain the named city, not a namesake in
+another country. Do not infer an etymology solely from a modern spelling.
+
+Check historical forms and locally relevant sources before translating.
+Names may derive from Spanish, Portuguese, Dutch, English, Quechua, Aymara,
+Guarani, Tupi-Guarani, Mapudungun, other Indigenous languages, saints, people,
+or transferred place names. Distinguish a documented naming event from an
+uncertain deeper etymology. A saint's or person's name is not automatically a
+literal description of the city. Do not expand opaque Indigenous components
+from a resemblance to modern words. Treat folklore and competing derivations
+as claims, not established facts.
+
+Prefer municipal or national history, scholarly toponymy, historical
+gazetteers, and source-language dictionaries. Return one to three genuinely
+distinct supported interpretations, with aligned zh/en/ja/fr/es translations.
+If a reliable lexical meaning cannot be established, return uncertain rather
+than a plausible-sounding gloss. Put source URLs and caveats in the English
+note, and cite only sources actually checked. Do not add qualifiers such as
+"possibly means" to translation strings.

@@ -1,0 +1,23 @@
+Review exactly these two Chinese city names against their documented naming
+chains. Preserve the existing literal_name exactly as supplied in INPUT_JSON.
+Return only supportable meanings, aligned across zh/en/ja/fr/es.
+
+武汉市: 武汉 is a combined name for 武昌, 汉口 and 汉阳, the three towns.
+The first character does NOT directly describe modern Wuhan as a city of
+military strength. The publishable meaning should identify the source towns,
+not turn the isolated characters 武 and 汉 into an unrelated descriptive
+phrase. Return one interpretation unless a separate derivation of 武汉 itself
+is documented. Verify using these government historical leads:
+https://dfz.wuhan.gov.cn/sqgk/whsq/
+https://mzw.hubei.gov.cn/ztzl/dzh/jcdzh/202311/t20231115_4945982.shtml
+
+郑州市: The Sui administration named 郑州 after the older 郑 state/region.
+An ancient written form of 郑 resembles 奠, but that alone does NOT show
+that ritual offerings motivated this place name. Do not translate 郑 as
+"ritual offering" or "memorial ceremony". If the older root remains
+unknown, retain Zheng as a proper noun while translating the administrative
+relationship, or return uncertain if no credible lexical reading exists.
+Verify using this Zhengzhou civil-affairs history:
+https://mzj.zhengzhou.gov.cn/work/9468538.jhtml
+
+Do not invent deeper etymologies, synonyms as alternatives, or citations.
