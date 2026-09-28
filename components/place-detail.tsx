@@ -2,6 +2,7 @@
 import {useLocale} from './locale-provider';
 import {kindName,languageName,localizedText} from '../lib/i18n';
 import type {AtlasRecord} from '../lib/feature-model';
+import {MeaningFeedback} from './meaning-feedback';
 export function PlaceDetail({record}:{record:AtlasRecord}){
  const {locale,t}=useLocale();
  const name=localizedText(record.names,locale);
@@ -20,6 +21,7 @@ export function PlaceDetail({record}:{record:AtlasRecord}){
    {meanings.length>1?<ol className="meaning-list">{meanings.map((meaning,index)=><li key={index} dir="auto" lang={meaning?.lang}>{meaning?.text||t('noMeaning')}</li>)}</ol>
     :<h3 dir="auto" lang={meanings[0]?.lang} className={!meanings[0]?'meaning-empty':undefined}>{meanings[0]?.text||t('noMeaning')}</h3>}
    {meanings.find(meaning=>meaning&&meaning.lang!==locale)&&<p className="translation-fallback">{t('fallback',{language:languageName(meanings.find(meaning=>meaning&&meaning.lang!==locale)!.lang,locale)})}</p>}
+   <MeaningFeedback key={record.feature_id} record={record}/>
   </section>
  </article>;
 }

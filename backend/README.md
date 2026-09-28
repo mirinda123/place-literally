@@ -1,5 +1,15 @@
 # Python 后端：features-v10 索引
 
+## 本机反馈
+
+地点详情中的反馈提交到独立的 `place-feedback-v1` 索引，不会自动修改地点释义。可在 `backend/.env` 用 `ES_FEEDBACK_INDEX` 设置其他索引名。查看待处理反馈：
+
+```powershell
+backend\.venv\Scripts\python.exe -m backend.list_feedback
+```
+
+目前仅供本机试用；公开开放匿名提交前需要增加防滥用措施。
+
 Python 3.11+、FastAPI、Elasticsearch 9.x。当前默认连接 http://localhost:9200 ，使用 features-v10；不创建 etymologies 或 semantic-catalog 索引。
 
 ## 启动

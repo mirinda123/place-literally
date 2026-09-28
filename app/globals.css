@@ -183,3 +183,27 @@
 .material-threshold-slider:hover [data-slot="slider-thumb"]{box-shadow:0 0 0 2px #fff,0 0 0 8px #315bc91c}
 .material-threshold-slider [data-slot="slider-thumb"]:focus-visible{outline:3px solid #9fb8ee;outline-offset:4px;box-shadow:0 0 0 2px #fff,0 0 0 8px #315bc91c}
 @media(max-width:767px){.sidebar-place-detail{padding-bottom:16px}.related-results-header{top:67px}}
+
+/* Reader feedback stays with the meaning it describes. */
+.feedback-entry-row{display:flex;justify-content:flex-end;margin-top:14px}
+.feedback-entry{height:auto;min-height:28px;padding:2px 0;color:#647d96;font-size:12px;font-weight:500;white-space:normal;text-align:right}
+.feedback-entry:hover{color:#315bc9;text-decoration:underline;background:transparent}
+.feedback-panel{color:#243747}
+.feedback-dialog{display:block;max-width:480px;max-height:88dvh;overflow-y:auto;border-radius:18px;padding:24px}
+.feedback-sheet{max-height:90dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom))}
+.feedback-heading{text-align:left;padding:0;margin-bottom:18px}
+.feedback-heading [data-slot="dialog-title"],.feedback-heading [data-slot="sheet-title"]{font-size:20px;line-height:1.3}
+.feedback-heading [data-slot="dialog-description"],.feedback-heading [data-slot="sheet-description"]{margin-top:4px;color:#65798a;font-size:13px}
+.feedback-context{display:grid;gap:9px;padding:13px 15px;border-radius:12px;background:#f3f6fb;margin-bottom:18px}
+.feedback-context>div{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;align-items:start;font-size:13px;line-height:1.5}
+.feedback-context span{color:#738699}.feedback-context strong{min-width:0;font-weight:500;overflow-wrap:anywhere}
+.feedback-form{display:grid;gap:15px}
+.feedback-form label{display:grid;gap:7px;font-size:13px;font-weight:500;color:#31465a}
+.feedback-form input,.feedback-form textarea,.feedback-form select{width:100%;font-weight:400;color:#243747}
+.feedback-form textarea{min-height:100px;resize:vertical}
+.feedback-form select{height:38px;padding:0 10px;border:1px solid #d8e0e8;border-radius:8px;background:#fff}
+.feedback-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.feedback-error{margin:0;color:#b43d3d;font-size:12px;line-height:1.5}
+.feedback-field-error{color:#b43d3d;font-size:12px;font-weight:400;line-height:1.5}
+.feedback-success{display:grid;gap:15px;justify-items:end}.feedback-success p{justify-self:stretch;margin:0;font-size:14px;line-height:1.6}
+@media(max-width:767px){.feedback-entry-row{margin-top:12px}.feedback-sheet .feedback-heading{margin-bottom:4px}.feedback-sheet .feedback-context{margin-bottom:4px}}

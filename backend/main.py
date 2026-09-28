@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import Settings, connect
+from .feedback import FeedbackRequest, build_feedback_document, save_feedback
 from .indexing import PUBLIC_SOURCE_EXCLUDES
 from .search import SearchRequest, run_search
 from .similar import SimilarLanguage, similar_places
@@ -27,7 +28,7 @@ def create_app(settings: Settings | None = None):
             app.state.es.close()
 
     app = FastAPI(title="Place, Literally API", version="0.2.0", lifespan=lifespan,
-                  description="地理实体与多语言字面含义；单一 features 索引。")
+                  description="地理实体与多语言字面含义；反馈单独保存，不修改 features 索引。")
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.origins),
                        allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 
@@ -53,6 +54,17 @@ def create_app(settings: Settings | None = None):
     @app.post("/api/search")
     def search_post(request: Request, params: SearchRequest):
         return run_search(request.app.state.es, settings, params)
+
+    @app.post("/api/feedback", status_code=201)
+    def submit_feedback(request: Request, report: FeedbackRequest):
+        client = request.app.state.es
+        feature = get_feature(client, report.feature_id)
+        try:
+            document = build_feedback_document(feature, report)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        save_feedback(client, settings.feedback_index, document)
+        return {"id": document["id"], "status": document["status"]}
 
     @app.get("/api/features")
     def features(request: Request, limit: int = Query(20, ge=1, le=100),
