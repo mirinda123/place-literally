@@ -224,13 +224,14 @@
 
 /* Keep selected places readable without covering the mobile map and its connections. */
 @media(max-width:767px){
+ html,body{overscroll-behavior-y:none}
  [data-mobile=true][data-sidebar=sidebar].mobile-detail-sheet{inset: auto 0 0;width:100%;max-width:none;height:min(118px,calc(100dvh - 90px));padding:0 0 env(safe-area-inset-bottom);border:1px solid #dce5ed;border-bottom:0;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -8px 28px #18364d22;overflow:hidden;transition:height .24s ease,transform .3s ease}
  [data-mobile=true][data-sidebar=sidebar].mobile-detail-sheet[data-expanded=true]{height:min(72dvh,680px)}
  .mobile-detail-sheet>div:last-child{min-height:0}
- .mobile-detail-sheet .sidebar{flex:1;min-height:0;height:auto;border:0;scrollbar-width:none}
+  .mobile-detail-sheet .sidebar{flex:1;min-height:0;height:auto;border:0;scrollbar-width:none;overscroll-behavior-y:contain}
  .mobile-detail-sheet .sidebar::-webkit-scrollbar{display:none}
  .mobile-detail-sheet[data-expanded=false] .sidebar{display:none}
- .mobile-detail-peek{position:relative;flex:none;min-width:0;background:#fff;touch-action:pan-y}
+  .mobile-detail-peek{position:relative;flex:none;min-width:0;background:#fff;touch-action:none}
  .mobile-detail-summary{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;height:116px;padding:9px 20px 10px;border:0;background:transparent;color:#263a4d;text-align:left}
  .mobile-detail-summary:focus-visible{outline:3px solid #dda843;outline-offset:-3px}
  .mobile-detail-handle{align-self:center;width:38px;height:4px;margin:0 0 5px;border-radius:4px;background:#c9d3dc}

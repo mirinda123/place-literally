@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import {ArrowUpRight,ChevronLeft,Link2,LocateFixed,PanelLeft,Search,X} from 'lucide-react';
 import {flushSync} from 'react-dom';
 import dynamic from 'next/dynamic';
@@ -16,6 +16,7 @@ import {PlaceDetail} from '../components/place-detail';
 import {kindName,languageName,localizedText,relatedListLabels,vectorLabels} from '../lib/i18n';
 import {relatedMeanings} from '../lib/related-places';
 const MapView=dynamic(()=>import('./map-view'),{ssr:false});
+type MobileDetailDrag={pointerId:number;startY:number;startHeight:number;lastY:number;sheet:HTMLElement;moved:boolean};
 export default function Home(){return <LocaleProvider><SidebarProvider className="atlas-provider" defaultOpen={false}><Atlas /></SidebarProvider></LocaleProvider>;}
 function SimilarityThreshold({label,shortLabel,value,onCommit}:{label:string;shortLabel:string;value:number;onCommit:(value:number)=>void}){
  const [draft,setDraft]=useState(value);
@@ -41,7 +42,9 @@ function Atlas(){
  const panelOpen=isMobile?openMobile:open;
  const [selected,setSelected]=useState<string|null>(null),[query,setQuery]=useState(''),[lines,setLines]=useState(true);
  const [mobileDetailExpanded,setMobileDetailExpanded]=useState(false);
- const mobileDragStart=useRef<number|null>(null);
+ const mobileDrag=useRef<MobileDetailDrag|null>(null);
+ const mobileSnapTimer=useRef<number|null>(null);
+ const mobileClickTimer=useRef<number|null>(null);
  const ignorePeekClick=useRef(false);
  const [focusRequest,setFocusRequest]=useState<{id:string;sequence:number;animate?:boolean}|null>(null);
  const [connectionMode,setConnectionMode]=useState<'text'|'vector'>('text');
@@ -68,7 +71,7 @@ function Atlas(){
  const [similarRetry,setSimilarRetry]=useState(0);
  const mapRequest=useRef<AbortController|null>(null);
  const [mapLookup,setMapLookup]=useState<{target:MapPlaceTarget;state:'not_found'|'ambiguous'|'unsupported'|'error'}|null>(null);
- useEffect(()=>()=>mapRequest.current?.abort(),[]);
+ useEffect(()=>()=>{mapRequest.current?.abort();if(mobileSnapTimer.current!==null)window.clearTimeout(mobileSnapTimer.current);if(mobileClickTimer.current!==null)window.clearTimeout(mobileClickTimer.current);},[]);
  function clearMapLookup(){mapRequest.current?.abort();setMapLookup(null);}
  async function selectMapPlace(target:MapPlaceTarget){
   mapRequest.current?.abort();setMapLookup(null);
@@ -169,7 +172,42 @@ function Atlas(){
  function locateRelated(id:string){setFocusRequest(previous=>({id,sequence:(previous?.sequence??0)+1,animate:true}));}
  function backToExplore(){clearMapLookup();setSelected(null);setMobileDetailExpanded(false);closeSearch();}
  function closeSelected(){clearMapLookup();setSelected(null);setQuery('');setMobileDetailExpanded(false);if(isMobile)setOpenMobile(false);else setOpen(false);}
- function finishMobileDrag(y:number){if(mobileDragStart.current===null)return;const delta=y-mobileDragStart.current;mobileDragStart.current=null;if(Math.abs(delta)<45)return;ignorePeekClick.current=true;setMobileDetailExpanded(delta<0);setTimeout(()=>{ignorePeekClick.current=false;},350);}
+ function mobileSheetHeights(){return {peek:Math.min(118,window.innerHeight-90),expanded:Math.min(window.innerHeight*.72,680)};}
+ function startMobileDrag(event:ReactPointerEvent<HTMLDivElement>){
+  if((event.pointerType==='mouse'&&event.button!==0)||(event.target as HTMLElement).closest('.current-place-locate'))return;
+  const sheet=event.currentTarget.closest<HTMLElement>('.mobile-detail-sheet');
+  if(!sheet)return;
+  if(mobileSnapTimer.current!==null){window.clearTimeout(mobileSnapTimer.current);mobileSnapTimer.current=null;}
+  (event.target as Element).setPointerCapture(event.pointerId);
+  mobileDrag.current={pointerId:event.pointerId,startY:event.clientY,startHeight:sheet.getBoundingClientRect().height,lastY:event.clientY,sheet,moved:false};
+ }
+ function moveMobileDrag(event:ReactPointerEvent<HTMLDivElement>){
+  const drag=mobileDrag.current;
+  if(!drag||drag.pointerId!==event.pointerId)return;
+  const y=event.clientY;
+  if(!drag.moved&&Math.abs(y-drag.startY)<4)return;
+  drag.moved=true;drag.lastY=y;
+  const {peek,expanded}=mobileSheetHeights();
+  drag.sheet.style.transition='none';
+  drag.sheet.style.height=`${Math.max(peek,Math.min(expanded,drag.startHeight+drag.startY-y))}px`;
+ }
+ function finishMobileDrag(pointerId:number,y:number,cancelled=false){
+  const drag=mobileDrag.current;
+  if(!drag||drag.pointerId!==pointerId)return;
+  mobileDrag.current=null;
+  if(!drag.moved)return;
+  ignorePeekClick.current=true;
+  if(mobileClickTimer.current!==null)window.clearTimeout(mobileClickTimer.current);
+  mobileClickTimer.current=window.setTimeout(()=>{ignorePeekClick.current=false;mobileClickTimer.current=null;},350);
+  const delta=(cancelled?drag.lastY:y)-drag.startY;
+  const expanded=cancelled||Math.abs(delta)<24?mobileDetailExpanded:delta<0;
+  const heights=mobileSheetHeights();
+  drag.sheet.getBoundingClientRect();
+  drag.sheet.style.transition='';
+  drag.sheet.style.height=`${expanded?heights.expanded:heights.peek}px`;
+  setMobileDetailExpanded(expanded);
+  mobileSnapTimer.current=window.setTimeout(()=>{drag.sheet.style.height='';mobileSnapTimer.current=null;},280);
+ }
  useEffect(()=>{
   const context=(document as any).modelContext;if(!context?.registerTool)return;
   const lifecycle=new AbortController();
@@ -190,7 +228,7 @@ function Atlas(){
   <LanguageSwitcher/>
   <div className="workspace">
    <Sidebar collapsible="offcanvas" className="atlas-sidebar-shell" mobileDetail={isMobile&&!!current} mobileDetailExpanded={mobileDetailExpanded}>
-    {isMobile&&current&&<div className="mobile-detail-peek" onTouchStart={event=>{mobileDragStart.current=event.touches[0].clientY;}} onTouchEnd={event=>finishMobileDrag(event.changedTouches[0].clientY)} onTouchCancel={()=>{mobileDragStart.current=null;}}>
+    {isMobile&&current&&<div className="mobile-detail-peek" onPointerDown={startMobileDrag} onPointerMove={moveMobileDrag} onPointerUp={event=>finishMobileDrag(event.pointerId,event.clientY)} onPointerCancel={event=>finishMobileDrag(event.pointerId,event.clientY,true)}>
      <button type="button" className="mobile-detail-summary" aria-expanded={mobileDetailExpanded} aria-controls="meaning-sidebar" onClick={()=>{if(ignorePeekClick.current)return;setMobileDetailExpanded(value=>!value);}}>
       <span className="mobile-detail-handle" aria-hidden="true"/>
       <span className="mobile-detail-title"><strong dir="auto">{nameOf(current)}</strong></span>
