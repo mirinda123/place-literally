@@ -25,9 +25,11 @@ export default function MapView({all,visible,selected,focusRequest,onSelect,onMa
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[offline,setOffline]=useState(false);
  const mapCallback=useRef(onMapPlace);
  const backgroundCallback=useRef(onMapBackgroundClick);
+ const localeRef=useRef(locale);
  const recordsRef=useRef(all);
  const recordIdsRef=useRef(new Set(all.map(record=>record.feature_id)));
  useEffect(()=>{mapCallback.current=onMapPlace;backgroundCallback.current=onMapBackgroundClick;recordsRef.current=all;recordIdsRef.current=new Set(all.map(record=>record.feature_id));},[onMapPlace,onMapBackgroundClick,all]);
+ useEffect(()=>{localeRef.current=locale;},[locale]);
  useEffect(()=>{
   let disposed=false;
   let resizeObserver:ResizeObserver|undefined;
@@ -92,10 +94,10 @@ export default function MapView({all,visible,selected,focusRequest,onSelect,onMa
      const own=hits.find(feature=>feature.layer.id===FALLBACK_LAYER);
      if(own){
       const record=recordsRef.current.find(r=>r.feature_id===own.properties.feature_id);
-      if(record)mapCallback.current({name:displayName(record,'zh'),osm:record.external_ids?.osm[0],featureId:record.feature_id});
+      if(record)mapCallback.current({name:displayName(record,localeRef.current),osm:record.external_ids?.osm[0],featureId:record.feature_id});
       return;
      }
-     for(const hit of hits){const target=basemapTarget(hit);if(target){mapCallback.current(target);return;}}
+     for(const hit of hits){const target=basemapTarget(hit,localeRef.current);if(target){mapCallback.current(target);return;}}
      backgroundCallback.current();
     });
     instance.on('mousemove',event=>{

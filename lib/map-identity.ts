@@ -1,5 +1,7 @@
 // This adapter is specific to OpenFreeMap's Planetiler-generated OSM features.
 // Do not apply it to another provider, synthetic IDs, or our own GeoJSON layer.
+import type {ActiveLocale} from './i18n';
+
 export type MapPlaceTarget={name:string;osm?:string;featureId?:string};
 export function decodeOsmId(id:unknown):string|undefined{
  if(typeof id!=='number'||!Number.isSafeInteger(id)||id<=10)return;
@@ -12,10 +14,11 @@ export function encodeOsmId(osm:string):number|undefined{
  const id=Number(match[2])*10+({node:1,way:2,relation:3} as Record<string,number>)[match[1]];
  return Number.isSafeInteger(id)?id:undefined;
 }
-export function basemapTarget(feature:{id?:unknown;source?:string;sourceLayer?:string;properties?:Record<string,unknown>|null}):MapPlaceTarget|undefined{
+export function basemapTarget(feature:{id?:unknown;source?:string;sourceLayer?:string;properties?:Record<string,unknown>|null},locale:ActiveLocale='en'):MapPlaceTarget|undefined{
  if(feature.source!=='openmaptiles'||feature.sourceLayer!=='place')return;
  const props=feature.properties;
- const name=props?.['name:zh']||props?.['name:en']||props?.name;
- if(typeof name!=='string'||!name.trim())return;
+ const keys=[`name:${locale}`,...(locale==='zh'?['name:zh-Hans','name:zh-CN']:[]),'name:en','name','name:zh'];
+ const name=keys.map(key=>props?.[key]).find(value=>typeof value==='string'&&value.trim());
+ if(typeof name!=='string')return;
  return {name,osm:decodeOsmId(feature.id)};
 }

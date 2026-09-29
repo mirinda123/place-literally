@@ -71,7 +71,8 @@ function Atlas(){
   mapRequest.current?.abort();const controller=new AbortController();mapRequest.current=controller;
   setSelected(null);setQuery('');if(isMobile)setOpenMobile(false);
   if(!target.osm&&!target.featureId){setMapLookup({target,state:'unsupported'});return;}
-  setMapLookup({target,state:'loading'});
+  setMapLookup(null);
+  const loadingTimer=setTimeout(()=>{if(!controller.signal.aborted)setMapLookup({target,state:'loading'});},200);
   try{
    const result=target.osm?await resolveMapPlace(target.osm,controller.signal):{status:'matched',feature:await loadRecord(target.featureId!,controller.signal)};
    if(controller.signal.aborted)return;
@@ -81,6 +82,7 @@ function Atlas(){
    setSelected(record.feature_id);setMapLookup(null);
    revealRelated();
   }catch{if(!controller.signal.aborted)setMapLookup({target,state:'error'});}
+  finally{clearTimeout(loadingTimer);}
  }
  async function fetchSearch(text:string,signal?:AbortSignal){
   const result=await searchAtlas(text.trim(),'near',signal);

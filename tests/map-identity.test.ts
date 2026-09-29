@@ -13,8 +13,12 @@ test('OpenFreeMap OSM identities preserve object type and reject synthetic or un
  assert.equal(encodeOsmId('node/9999999999999999999'),undefined);
 });
 test('decode only the configured provider place layer, including non-OSM names with no matching key',()=>{
- const f={source:'openmaptiles',sourceLayer:'place',id:2440813811,properties:{name:'南京市','name:en':'Nanjing'}};
+ const f={source:'openmaptiles',sourceLayer:'place',id:2440813811,properties:{name:'南京市','name:zh':'南京','name:en':'Nanjing','name:fr':'Nankin'}};
  assert.deepEqual(basemapTarget(f),{name:'Nanjing',osm:'node/244081381'});
+ assert.equal(basemapTarget(f,'en')?.name,'Nanjing');
+ assert.equal(basemapTarget(f,'zh')?.name,'南京');
+ assert.equal(basemapTarget(f,'fr')?.name,'Nankin');
+ assert.equal(basemapTarget(f,'es')?.name,'Nanjing');
  assert.equal(basemapTarget({...f,source:'other-provider'}),undefined);
  assert.equal(basemapTarget({...f,sourceLayer:'poi'}),undefined);
  assert.equal(basemapTarget({...f,properties:{}}),undefined);
