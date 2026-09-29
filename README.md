@@ -2,6 +2,8 @@
 
 A map of what place names mean. Click a place to see its literal meaning and find other places with similar meanings.
 
+![Place, Literally showing the meaning of Las Vegas and related places](docs/images/literal-meaning.png)
+
 ## Run locally
 
 You need Node.js 22.13+, Python 3.11+, and Elasticsearch 9.x. Set up the database and Python dependencies using the [backend guide](backend/README.md), then start the API:
