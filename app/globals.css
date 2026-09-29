@@ -93,6 +93,8 @@
 .related-results-header{padding:14px 18px 12px;border-top:1px solid #e8edf3;border-bottom:1px solid #e8edf3;background:#fff}
 .related-browser-tools{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;min-width:0}
 .related-browser-kicker{min-width:0;margin-left:5px;color:#8397a7;font-size:12px;white-space:nowrap}
+.related-mode-control{display:inline-flex;align-items:center;gap:8px;flex:none;min-width:0}
+.related-mode-label{color:#758b9e;font-size:12px;white-space:nowrap}
 .related-mode-switch{display:inline-flex;align-items:center;flex:none;gap:2px;max-width:100%;min-width:0;margin:0;padding:3px;border:1px solid #e1e8f1;border-radius:999px;background:#f3f6fa}
 .related-mode-switch label{position:relative;display:inline-flex;min-width:0;cursor:pointer}
 .related-mode-switch input{position:absolute;width:1px;height:1px;opacity:0}
@@ -121,7 +123,7 @@
 .related-meaning-text{min-width:0}
 .related-translation-language{color:#8194a4;font-size:11px}
 .related-score{display:block;margin-top:5px;color:#8194a4;font-size:11px}
-@media(max-width:767px){.sidebar-search-wrap{padding:9px 10px 8px}.sidebar-search{height:46px}.map-search-launch{width:calc(100% - 135px)}.map-search-launch-label{font-size:13px}.place-hero{height:96px}.related-results-header{padding:12px 16px}.related-place-list{padding-top:8px}}
+@media(max-width:767px){.sidebar-search-wrap{padding:9px 10px 8px}.sidebar-search{height:46px}.map-search-launch{width:calc(100% - 135px)}.map-search-launch-label{font-size:13px}.place-hero{height:96px}.related-results-header{padding:12px 16px}.related-browser-tools{display:grid;justify-items:start;gap:8px}.related-place-list{padding-top:8px}}
 
 /* A map-style information rail: clear hierarchy, quiet surfaces, and scannable rows. */
 @media(min-width:1100px){.atlas-provider{--sidebar-width:390px!important}}
@@ -184,7 +186,7 @@
 .material-threshold-slider [data-slot="slider-thumb"]:focus-visible{outline:3px solid #9fb8ee;outline-offset:4px;box-shadow:0 0 0 2px #fff,0 0 0 8px #315bc91c}
 @media(max-width:767px){.sidebar-place-detail{padding-bottom:16px}.related-results-header{top:67px}}
 
-/* Reader feedback stays with the meaning it describes. */
+/* Reader feedback keeps the current meanings for review. */
 .feedback-entry-row{display:flex;justify-content:flex-end;margin-top:14px}
 .feedback-entry{height:auto;min-height:28px;padding:2px 0;color:#647d96;font-size:12px;font-weight:500;white-space:normal;text-align:right}
 .feedback-entry:hover{color:#315bc9;text-decoration:underline;background:transparent}
@@ -197,11 +199,12 @@
 .feedback-context{display:grid;gap:9px;padding:13px 15px;border-radius:12px;background:#f3f6fb;margin-bottom:18px}
 .feedback-context>div{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;align-items:start;font-size:13px;line-height:1.5}
 .feedback-context span{color:#738699}.feedback-context strong{min-width:0;font-weight:500;overflow-wrap:anywhere}
+.feedback-meanings{min-width:0;margin:0;padding:0;list-style:none;font-weight:500;overflow-wrap:anywhere}
+.feedback-meanings li+li{margin-top:3px}
 .feedback-form{display:grid;gap:15px}
 .feedback-form label{display:grid;gap:7px;font-size:13px;font-weight:500;color:#31465a}
-.feedback-form input,.feedback-form textarea,.feedback-form select{width:100%;font-weight:400;color:#243747}
+.feedback-form input,.feedback-form textarea{width:100%;font-weight:400;color:#243747}
 .feedback-form textarea{min-height:100px;resize:vertical}
-.feedback-form select{height:38px;padding:0 10px;border:1px solid #d8e0e8;border-radius:8px;background:#fff}
 .feedback-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
 .feedback-error{margin:0;color:#b43d3d;font-size:12px;line-height:1.5}
 .feedback-field-error{color:#b43d3d;font-size:12px;font-weight:400;line-height:1.5}

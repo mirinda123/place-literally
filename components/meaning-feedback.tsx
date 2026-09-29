@@ -29,8 +29,8 @@ export function MeaningFeedback({record}:{record:AtlasRecord}){
  const meanings=record.literal_meanings.map(item=>localizedText(item.translations,locale));
  const name=localizedText(record.names,locale)?.text||record.feature_id;
  const [open,setOpen]=useState(false);
- const [meaningIndex,setMeaningIndex]=useState(0);
  const [description,setDescription]=useState('');
+ const [nickname,setNickname]=useState('');
  const [suggestion,setSuggestion]=useState('');
  const [sourceUrl,setSourceUrl]=useState('');
  const [status,setStatus]=useState<'idle'|'sending'|'success'|'error'>('idle');
@@ -38,7 +38,7 @@ export function MeaningFeedback({record}:{record:AtlasRecord}){
 
  function changeOpen(next:boolean){
   if(!next&&status==='sending')return;
-  if(next){setMeaningIndex(0);setDescription('');setSuggestion('');setSourceUrl('');setStatus('idle');setValidation(null);}
+  if(next){setDescription('');setNickname('');setSuggestion('');setSourceUrl('');setStatus('idle');setValidation(null);}
   setOpen(next);
  }
  async function submit(event:FormEvent<HTMLFormElement>){
@@ -49,8 +49,9 @@ export function MeaningFeedback({record}:{record:AtlasRecord}){
   setValidation(null);
   setStatus('sending');
   try{
-   await submitMeaningFeedback({feature_id:record.feature_id,meaning_index:hasMeaning?meaningIndex:null,
-    language:locale,description:description.trim(),suggested_meaning:suggestion.trim()||null,source_url:sourceUrl.trim()||null});
+   await submitMeaningFeedback({feature_id:record.feature_id,meaning_index:null,
+    language:locale,description:description.trim(),nickname:nickname.trim()||null,
+    suggested_meaning:suggestion.trim()||null,source_url:sourceUrl.trim()||null});
    setStatus('success');
   }catch{setStatus('error');}
  }
@@ -65,17 +66,16 @@ export function MeaningFeedback({record}:{record:AtlasRecord}){
   <div className="feedback-context">
    <div><span>{labels.context}</span><strong dir="auto">{name}</strong></div>
    {record.literal_name&&<div><span>{labels.original}</span><strong dir="auto" lang={record.literal_name.lang}>{record.literal_name.text}</strong></div>}
-   {hasMeaning&&<div><span>{labels.meaning}</span><strong dir="auto" lang={meanings[meaningIndex]?.lang}>{meanings[meaningIndex]?.text||t('noMeaning')}</strong></div>}
+   {hasMeaning&&<div><span>{labels.meaning}</span>
+    {meanings.length>1?<ol className="feedback-meanings">
+     {meanings.map((meaning,index)=><li key={index} dir="auto" lang={meaning?.lang}>{meaning?.text||t('noMeaning')}</li>)}
+    </ol>:<strong dir="auto" lang={meanings[0]?.lang}>{meanings[0]?.text||t('noMeaning')}</strong>}
+   </div>}
   </div>
   {status==='success'?<div className="feedback-success" role="status">
     <p>{labels.success}</p><Button type="button" onClick={()=>changeOpen(false)}>{labels.done}</Button>
    </div>
    :<form className="feedback-form" onSubmit={submit} noValidate>
-    {hasMeaning&&meanings.length>1&&<label htmlFor={`${id}-meaning`}>{labels.chooseMeaning}
-     <select id={`${id}-meaning`} value={meaningIndex} onChange={event=>setMeaningIndex(Number(event.target.value))} disabled={status==='sending'}>
-      {meanings.map((meaning,index)=><option key={index} value={index}>{index+1}. {meaning?.text||t('noMeaning')}</option>)}
-     </select>
-    </label>}
     <label htmlFor={`${id}-reason`}>{labels.reason}
      <Textarea id={`${id}-reason`} value={description} onChange={event=>{setDescription(event.target.value);if(validation==='reason')setValidation(null);if(status==='error')setStatus('idle');}}
       maxLength={2000} required disabled={status==='sending'} placeholder={labels.reasonHint}
@@ -91,6 +91,10 @@ export function MeaningFeedback({record}:{record:AtlasRecord}){
       disabled={status==='sending'} placeholder={labels.sourceHint}
       aria-invalid={validation==='source'} aria-describedby={validation==='source'?`${id}-source-error`:undefined}/>
      {validation==='source'&&<span id={`${id}-source-error`} className="feedback-field-error" role="alert">{labels.invalidSource}</span>}
+    </label>
+    <label htmlFor={`${id}-nickname`}>{labels.nickname}
+     <Input id={`${id}-nickname`} value={nickname} onChange={event=>setNickname(event.target.value)}
+      maxLength={80} autoComplete="nickname" disabled={status==='sending'} placeholder={labels.nicknameHint}/>
     </label>
     {status==='error'&&<p className="feedback-error" role="alert">{labels.error}</p>}
     <div className="feedback-actions">

@@ -15,10 +15,11 @@ class FeedbackRequest(BaseModel):
     meaning_index: int | None = Field(default=None, ge=0)
     language: Literal["zh", "en", "ja", "fr", "es"]
     description: str = Field(min_length=1, max_length=2000)
+    nickname: str | None = Field(default=None, max_length=80)
     suggested_meaning: str | None = Field(default=None, max_length=500)
     source_url: HttpUrl | None = None
 
-    @field_validator("feature_id", "description", "suggested_meaning", mode="before")
+    @field_validator("feature_id", "description", "nickname", "suggested_meaning", mode="before")
     @classmethod
     def trim_text(cls, value):
         return value.strip() if isinstance(value, str) else value
@@ -36,6 +37,7 @@ FEEDBACK_MAPPING = {
         "original_name": {"type": "object", "enabled": False},
         "meaning_snapshot": {"type": "object", "enabled": False},
         "description": {"type": "text"},
+        "nickname": {"type": "keyword"},
         "suggested_meaning": {"type": "text"},
         "source_url": {"type": "keyword", "ignore_above": 2048},
         "status": {"type": "keyword"},
@@ -48,15 +50,22 @@ def build_feedback_document(feature: dict, report: FeedbackRequest) -> dict:
     meanings = feature.get("literal_meanings") or []
     has_meaning = any(any(isinstance(text, str) and text.strip()
                           for text in (item.get("translations") or {}).values()) for item in meanings)
-    if has_meaning and (report.meaning_index is None or report.meaning_index >= len(meanings)):
-        raise ValueError("Choose an existing meaning to report")
-    if not has_meaning and report.meaning_index is not None:
-        raise ValueError("This place has no meaning to report")
+    if report.meaning_index is not None:
+        if not has_meaning or report.meaning_index >= len(meanings):
+            raise ValueError("This place has no meaning at that index")
 
     names = feature.get("names") or {}
     place_name = (names.get(report.language) or names.get("en") or names.get("zh")
                   or next(iter(names.values()), report.feature_id))
     selected = meanings[report.meaning_index] if report.meaning_index is not None else None
+    if selected is not None:
+        meaning_snapshot = {"translations": selected.get("translations") or {}}
+    elif has_meaning:
+        meaning_snapshot = {"meanings": [
+            {"translations": item.get("translations") or {}} for item in meanings
+        ]}
+    else:
+        meaning_snapshot = None
     return {
         "id": uuid4().hex,
         "feature_id": report.feature_id,
@@ -64,8 +73,9 @@ def build_feedback_document(feature: dict, report: FeedbackRequest) -> dict:
         "meaning_index": report.meaning_index,
         "place_name": place_name,
         "original_name": feature.get("literal_name"),
-        "meaning_snapshot": {"translations": selected.get("translations") or {}} if selected else None,
+        "meaning_snapshot": meaning_snapshot,
         "description": report.description,
+        "nickname": report.nickname or None,
         "suggested_meaning": report.suggested_meaning or None,
         "source_url": str(report.source_url) if report.source_url else None,
         "status": "pending",
@@ -75,6 +85,9 @@ def build_feedback_document(feature: dict, report: FeedbackRequest) -> dict:
 
 def ensure_feedback_index(client, index: str) -> None:
     if client.indices.exists(index=index):
+        properties = client.indices.get_mapping(index=index)[index]["mappings"].get("properties", {})
+        if "nickname" not in properties:
+            client.indices.put_mapping(index=index, properties={"nickname": FEEDBACK_MAPPING["properties"]["nickname"]})
         return
     try:
         client.indices.create(index=index, mappings=FEEDBACK_MAPPING)

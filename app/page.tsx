@@ -189,11 +189,14 @@ function Atlas(){
      <div ref={relatedHeaderRef} className={`related-results-header${relatedHeaderStuck?' is-stuck':''}`}>
       <div className="related-browser-tools">
        <h3 className="related-browser-kicker">{t('related',{count:relatedHits.length})}</h3>
-       <fieldset className="related-mode-switch">
-        <legend className="sr-only">{vectorText.matchMode}</legend>
-        <label><input type="radio" name="connection-mode" value="text" checked={connectionMode==='text'} onChange={()=>changeConnectionMode('text')} aria-label={vectorText.textMatch}/><span>{vectorText.textShort}</span></label>
-        <label><input type="radio" name="connection-mode" value="vector" checked={connectionMode==='vector'} onChange={()=>changeConnectionMode('vector')} aria-label={vectorText.vectorMatch}/><span>{vectorText.vectorShort}</span></label>
-       </fieldset>
+       <div className="related-mode-control">
+        <span className="related-mode-label" aria-hidden="true">{vectorText.matchMode}</span>
+        <fieldset className="related-mode-switch">
+         <legend className="sr-only">{vectorText.matchMode}</legend>
+         <label><input type="radio" name="connection-mode" value="text" checked={connectionMode==='text'} onChange={()=>changeConnectionMode('text')} aria-label={vectorText.textMatch}/><span>{vectorText.textShort}</span></label>
+         <label><input type="radio" name="connection-mode" value="vector" checked={connectionMode==='vector'} onChange={()=>changeConnectionMode('vector')} aria-label={vectorText.vectorMatch}/><span>{vectorText.vectorShort}</span></label>
+        </fieldset>
+       </div>
       </div>
       {connectionMode==='vector'&&<SimilarityThreshold label={vectorText.threshold} value={minSimilarity} onCommit={setMinSimilarity}/>}
      </div>

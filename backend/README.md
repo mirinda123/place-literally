@@ -2,7 +2,9 @@
 
 ## 本机反馈
 
-地点详情中的反馈提交到独立的 `place-feedback-v1` 索引，不会自动修改地点释义。可在 `backend/.env` 用 `ES_FEEDBACK_INDEX` 设置其他索引名。查看待处理反馈：
+地点详情中的反馈提交到独立的 `place-feedback-v1` 索引，不会自动修改地点释义。用户直接描述问题，无需选择某条释义；提交时保存该地点当前所有释义的翻译快照。昵称为选填项；已有反馈索引会在新反馈提交时自动补上 `nickname` 字段，旧记录保持不变。可在 `backend/.env` 用 `ES_FEEDBACK_INDEX` 设置其他索引名。
+
+查看待处理反馈：
 
 ```powershell
 backend\.venv\Scripts\python.exe -m backend.list_feedback

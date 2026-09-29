@@ -46,7 +46,7 @@ export function vectorSimilarPlaces(featureId:string,lang:ActiveLocale,minSimila
  return request<VectorSimilarResponse>(`/features/${encodeURIComponent(featureId)}/vector-similar?${params}`,{signal},120000);
 }
 
-export type MeaningFeedbackInput={feature_id:string;meaning_index:number|null;language:ActiveLocale;description:string;suggested_meaning:string|null;source_url:string|null};
+export type MeaningFeedbackInput={feature_id:string;meaning_index:number|null;language:ActiveLocale;description:string;nickname:string|null;suggested_meaning:string|null;source_url:string|null};
 export type MeaningFeedbackResponse={id:string;status:'pending'};
 export function submitMeaningFeedback(feedback:MeaningFeedbackInput){
  return request<MeaningFeedbackResponse>('/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(feedback)});
