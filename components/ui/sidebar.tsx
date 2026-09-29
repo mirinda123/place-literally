@@ -155,6 +155,8 @@ function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
+  mobileDetail = false,
+  mobileDetailExpanded = false,
   className,
   children,
   ...props
@@ -162,6 +164,8 @@ function Sidebar({
   side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
+  mobileDetail?: boolean
+  mobileDetailExpanded?: boolean
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -182,18 +186,23 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+      <Sheet open={openMobile} onOpenChange={setOpenMobile} modal={!mobileDetail} {...props}>
         <SheetContent
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          data-expanded={mobileDetail ? mobileDetailExpanded : undefined}
+          className={cn("w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden", mobileDetail && "mobile-detail-sheet")}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
             } as React.CSSProperties
           }
-          side={side}
+          side={mobileDetail ? "bottom" : side}
+          showOverlay={!mobileDetail}
+          showCloseButton={!mobileDetail}
+          onInteractOutside={mobileDetail ? event => event.preventDefault() : undefined}
+          onOpenAutoFocus={mobileDetail ? event => event.preventDefault() : undefined}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>

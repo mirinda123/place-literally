@@ -23,13 +23,13 @@ export const vectorLabels:Record<ActiveLocale,{matchMode:string;textMatch:string
  ja:{matchMode:'関連付け方式',textMatch:'語句の一致',vectorMatch:'ベクトル類似',textShort:'語句',vectorShort:'ベクトル',experimental:'ベクトル類似 · 試験版',threshold:'類似度のしきい値',noVector:'この言語のベクトルはまだありません',score:'類似度'},
 };
 export type Locale = ActiveLocale | 'ko';
-export const relatedListLabels:Record<Locale,{back:string}>={
- zh:{back:'返回探索'},
- en:{back:'Back to explore'},
- ja:{back:'探索に戻る'},
- fr:{back:'Retour à l’exploration'},
- es:{back:'Volver a explorar'},
- ko:{back:'탐색으로 돌아가기'},
+export const relatedListLabels:Record<Locale,{back:string;locate:string}>={
+ zh:{back:'返回探索',locate:'在地图上定位{name}'},
+ en:{back:'Back to explore',locate:'Locate {name} on the map'},
+ ja:{back:'探索に戻る',locate:'地図で{name}を表示'},
+ fr:{back:'Retour à l’exploration',locate:'Situer {name} sur la carte'},
+ es:{back:'Volver a explorar',locate:'Ubicar {name} en el mapa'},
+ ko:{back:'탐색으로 돌아가기',locate:'지도에서 {name} 위치 보기'},
 };
 export const isLocale = (value:unknown):value is ActiveLocale => languages.some(l=>l.code===value);
 const en = {

@@ -2,8 +2,8 @@
 
 This setup builds the frontend as a standalone Next.js Node server, runs the
 FastAPI backend separately, and keeps Elasticsearch on an internal Docker
-network. Nginx serves both frontend and API on port 80. Add a domain and HTTPS
-before inviting visitors to use the site.
+network. Caddy serves the public domain over HTTPS and forwards requests to an
+internal Nginx proxy, which routes the frontend and API and applies rate limits.
 
 The commands below assume a Linux x86-64 server with Docker Compose. Allow at
 least 4 GB of RAM; 8 GB leaves more room for Elasticsearch and builds. Build
@@ -59,16 +59,23 @@ delete an existing data volume merely to retry these commands.
 ```sh
 # Optional: set this server-side secret to enable vector similarity queries.
 export DASHSCOPE_API_KEY='your-key'
-docker compose -f deploy/compose.yml up -d api web proxy
+docker compose -f deploy/compose.yml up -d api web proxy gateway
 curl -fsS 'http://127.0.0.1/atlas-api/map-features?limit=1'
 ```
+
+The default public hostname is `place-literally.duckdns.org`; set
+`PUBLIC_DOMAIN` in the Compose environment to use another hostname. Point its
+DNS A record at the server and allow inbound TCP ports 80 and 443 in the cloud
+firewall. Caddy obtains and renews the certificate automatically, storing it in
+the persistent `caddy_data` volume. Domain HTTP requests redirect to HTTPS;
+direct-IP HTTP access remains available for diagnostics.
 
 The frontend calls `/atlas-api/*` on the same origin. Nginx forwards those
 requests to FastAPI's `/api/*`; neither Elasticsearch nor FastAPI has a public
 port. The vector cache uses a named volume and survives container replacement.
 Nginx limits feedback and vector requests per client IP. The feedback endpoint
-remains anonymous; configure HTTPS and public-edge abuse controls before
-inviting visitors to submit feedback.
+remains anonymous; add public-edge abuse controls before inviting visitors to
+submit feedback.
 
 Never expose Elasticsearch's port 9200 to the internet. Keep the snapshot ZIP
 off the web root and protect the server's Docker access. If you later take a

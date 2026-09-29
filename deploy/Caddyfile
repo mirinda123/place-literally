@@ -1,0 +1,8 @@
+{$PUBLIC_DOMAIN} {
+    reverse_proxy proxy:80
+}
+
+# Keep direct-IP HTTP access available for diagnostics.
+:80 {
+    reverse_proxy proxy:80
+}

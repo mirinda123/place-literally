@@ -1,7 +1,6 @@
 'use client';
 import {connectionOverlay} from '../lib/connection-overlay';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
-import {Globe2, MapPinned} from 'lucide-react';
 import {Button} from '../components/ui/button';
 import {coordinates,displayName} from '../lib/feature-model';
 import {FALLBACK_SOURCE,FALLBACK_LAYER,INLINE_STAR_SIZES,inlineStarName,isPlaceLayer,decorateBasemapPlaces,fallbackFeatures,pinImage,meaningImage} from '../lib/map-symbols';
@@ -12,11 +11,16 @@ import {basemapTarget,type MapPlaceTarget} from '../lib/map-identity';
 import {useLocale} from '../components/locale-provider';
 import {localizedText,translate} from '../lib/i18n';
 
-type Props={all:AtlasRecord[];visible:AtlasRecord[];selected:string|null;focusRequest:{id:string;sequence:number}|null;onSelect:(id:string)=>void;onMapPlace:(target:MapPlaceTarget)=>void;onMapBackgroundClick:()=>void;fit:number;lines:boolean;highlightedConnection:string|null};
+type Props={all:AtlasRecord[];visible:AtlasRecord[];selected:string|null;focusRequest:{id:string;sequence:number;animate?:boolean}|null;onSelect:(id:string)=>void;onMapPlace:(target:MapPlaceTarget)=>void;onMapBackgroundClick:()=>void;lines:boolean;highlightedConnection:string|null;mobileDetail:'hidden'|'peek'|'expanded'};
 const STREET_STYLE='https://tiles.openfreemap.org/styles/liberty';
 const fallbackStyle:StyleSpecification={version:8,glyphs:'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',sources:{world:{type:'geojson',data:'/world.geojson',attribution:'<a href="https://www.naturalearthdata.com/about/terms-of-use/">Natural Earth</a>'}},layers:[{id:'sea',type:'background',paint:{'background-color':'#dcebf1'}},{id:'land',type:'fill',source:'world',paint:{'fill-color':'#f5f7ed'}},{id:'boundaries',type:'line',source:'world',paint:{'line-color':'#bac8ce','line-width':0.65}}]};
+function mobilePanelHeight(state:Props['mobileDetail']){
+ if(typeof window==='undefined'||window.innerWidth>=768||state==='hidden')return 0;
+ return state==='expanded'?Math.min(window.innerHeight*.72,680):Math.min(118,window.innerHeight-90);
+}
+function mobileFocusOffset(state:Props['mobileDetail']):[number,number]{return [0,-mobilePanelHeight(state)/2];}
 
-export default function MapView({all,visible,selected,focusRequest,onSelect,onMapPlace,onMapBackgroundClick,fit,lines,highlightedConnection}:Props){
+export default function MapView({all,visible,selected,focusRequest,onSelect,onMapPlace,onMapBackgroundClick,lines,highlightedConnection,mobileDetail}:Props){
  const {locale,t}=useLocale();
  const container=useRef<HTMLDivElement>(null),map=useRef<MapType|null>(null);
  const hoverPopup=useRef<PopupType|null>(null);
@@ -179,24 +183,23 @@ export default function MapView({all,visible,selected,focusRequest,onSelect,onMa
   // The sidebar overlays the canvas, so center the destination in the uncovered map area.
   const panelOpen=container.current?.closest('.atlas-app')?.getAttribute('data-panel-open')==='true';
   const sidebarWidth=panelOpen&&window.innerWidth>=768?document.getElementById('meaning-sidebar')?.getBoundingClientRect().width||0:0;
-  map.current.flyTo({center:coordinates(place),zoom,offset:[sidebarWidth/2,0],duration:duration()});
- },[ready,focusRequest,all]);
- function showGlobe(){if(!map.current||!container.current)return;const availableWidth=container.current.clientWidth-(selected&&window.innerWidth>1050?370:50);const diameter=Math.max(180,Math.min(availableWidth,container.current.clientHeight-170));map.current.flyTo({zoom:Math.log2(diameter/180),center:map.current.getCenter(),pitch:0,bearing:0,padding:0,offset:selected&&window.innerWidth>1050?[-185,0]:[0,0],duration:duration()});}
- function showStreets(){const place=all.find(r=>r.feature_id===selected);if(place)map.current?.flyTo({center:coordinates(place) as [number,number],zoom:14,pitch:0,bearing:0,padding:0,offset:window.innerWidth>1050?[-170,0]:[0,-100],duration:duration()});}
- useEffect(()=>{
-  if(!fit||!ready||!map.current||!visible.length)return;
-  const xs=visible.map(r=>coordinates(r)[0]),ys=visible.map(r=>coordinates(r)[1]);const pad=window.innerWidth<800?65:100;
-  map.current.fitBounds([[Math.min(...xs)-3,Math.min(...ys)-3],[Math.max(...xs)+3,Math.max(...ys)+3]],{padding:{top:100,bottom:pad,left:pad,right:window.innerWidth>1050&&selected?380:pad},maxZoom:4,duration:duration()});
- // Fit only when requested; selection and result changes should not move the camera.
- // eslint-disable-next-line react-hooks/exhaustive-deps
- },[fit,ready]);
+  if(window.innerWidth<768){
+   // Offset this focus above the sheet without retaining map padding for later zooms.
+   const camera={center:coordinates(place),zoom,pitch:0,bearing:0,padding:0,offset:mobileFocusOffset(mobileDetail)};
+   if(focusRequest.animate){
+    if(map.current.getZoom()>=2)map.current.flyTo({...camera,duration:duration()});
+    else map.current.easeTo({...camera,duration:duration()});
+   }
+   else map.current.easeTo({...camera,duration:0});
+  }
+  else map.current.flyTo({center:coordinates(place),zoom,offset:[sidebarWidth/2,0],duration:duration()});
+ },[ready,focusRequest,all,mobileDetail]);
  return <>
   <div ref={container} className="map-canvas" aria-label={t('map')}/>
   <a className="map-github-link" href="https://github.com/mirinda123/place-literally" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub">
    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 3.73c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
   </a>
   <nav className="map-keyboard-places" aria-label={t('mapPlaces')}><span>{t('keyboardHint')}</span>{visible.slice(0,100).map(record=><Button key={record.feature_id} variant="ghost" aria-pressed={selected===record.feature_id} onClick={()=>onSelect(record.feature_id)}>{localizedText(record.names,locale)?.text||record.feature_id}</Button>)}</nav>
-  <div className="map-view-actions"><Button variant="ghost" disabled={!ready} onClick={showGlobe} aria-label={t('globe')} title={t('globe')}><Globe2 size={18}/></Button><Button variant="ghost" disabled={!ready||!selected||offline} onClick={showStreets} aria-label={t('streets')} title={t('streets')}><MapPinned size={18}/></Button></div>
   {(failed||offline)&&<div className="map-load-notice" role="status">{t(offline?'offline':'mapError')}</div>}
  </>;
 }

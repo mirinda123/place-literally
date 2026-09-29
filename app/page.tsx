@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {ArrowUpRight,ChevronLeft,Link2,Maximize,PanelLeft,Search,X} from 'lucide-react';
+import {ArrowUpRight,ChevronLeft,Link2,LocateFixed,PanelLeft,Search,X} from 'lucide-react';
 import {flushSync} from 'react-dom';
 import dynamic from 'next/dynamic';
 import {loadAtlas,searchAtlas,loadRecord,resolveMapPlace,similarPlaces,vectorSimilarPlaces,type SearchResponse,type SimilarResponse,type VectorSimilarResponse} from '../lib/atlas-api';
@@ -17,10 +17,10 @@ import {kindName,languageName,localizedText,relatedListLabels,vectorLabels} from
 import {relatedMeanings} from '../lib/related-places';
 const MapView=dynamic(()=>import('./map-view'),{ssr:false});
 export default function Home(){return <LocaleProvider><SidebarProvider className="atlas-provider" defaultOpen={false}><Atlas /></SidebarProvider></LocaleProvider>;}
-function SimilarityThreshold({label,value,onCommit}:{label:string;value:number;onCommit:(value:number)=>void}){
+function SimilarityThreshold({label,shortLabel,value,onCommit}:{label:string;shortLabel:string;value:number;onCommit:(value:number)=>void}){
  const [draft,setDraft]=useState(value);
  useEffect(()=>setDraft(value),[value]);
- return <div className="vector-threshold"><span id="vector-threshold-label">{label}</span><output>{draft.toFixed(2)}</output>
+ return <div className="vector-threshold"><span id="vector-threshold-label" className="threshold-label-full">{label}</span><span className="threshold-label-short" aria-hidden="true">{shortLabel}</span><output>{draft.toFixed(2)}</output>
   <Slider className="material-threshold-slider" min={50} max={90} step={1} value={[Math.round(draft*100)]} aria-labelledby="vector-threshold-label" aria-valuetext={draft.toFixed(2)} onValueChange={values=>setDraft(values[0]/100)} onValueCommit={values=>onCommit(values[0]/100)}/>
  </div>;
 }
@@ -39,8 +39,11 @@ function Atlas(){
  },[reload]);
  const {open,isMobile,openMobile,setOpen,setOpenMobile}=useSidebar();
  const panelOpen=isMobile?openMobile:open;
- const [selected,setSelected]=useState<string|null>(null),[query,setQuery]=useState(''),[fit,setFit]=useState(0),[lines,setLines]=useState(true);
- const [focusRequest,setFocusRequest]=useState<{id:string;sequence:number}|null>(null);
+ const [selected,setSelected]=useState<string|null>(null),[query,setQuery]=useState(''),[lines,setLines]=useState(true);
+ const [mobileDetailExpanded,setMobileDetailExpanded]=useState(false);
+ const mobileDragStart=useRef<number|null>(null);
+ const ignorePeekClick=useRef(false);
+ const [focusRequest,setFocusRequest]=useState<{id:string;sequence:number;animate?:boolean}|null>(null);
  const [connectionMode,setConnectionMode]=useState<'text'|'vector'>('text');
  const [minSimilarity,setMinSimilarity]=useState(0.60);
  const [hoveredConnection,setHoveredConnection]=useState<{key:string;featureId:string}|null>(null);
@@ -68,18 +71,24 @@ function Atlas(){
  useEffect(()=>()=>mapRequest.current?.abort(),[]);
  function clearMapLookup(){mapRequest.current?.abort();setMapLookup(null);}
  async function selectMapPlace(target:MapPlaceTarget){
-  mapRequest.current?.abort();const controller=new AbortController();mapRequest.current=controller;
-  setSelected(null);setQuery('');if(isMobile)setOpenMobile(false);
+  mapRequest.current?.abort();setMapLookup(null);
+  const currentRecord=records.find(record=>record.feature_id===selected);
+  if(currentRecord&&(target.featureId===currentRecord.feature_id||(target.osm&&currentRecord.external_ids?.osm.includes(target.osm)))){
+   if(isMobile)setOpenMobile(true);else setOpen(true);
+   return;
+  }
   if(!target.osm&&!target.featureId){setMapLookup({target,state:'unsupported'});return;}
-  setMapLookup(null);
+  const controller=new AbortController();mapRequest.current=controller;
   const loadingTimer=setTimeout(()=>{if(!controller.signal.aborted)setMapLookup({target,state:'loading'});},200);
   try{
    const result=target.osm?await resolveMapPlace(target.osm,controller.signal):{status:'matched',feature:await loadRecord(target.featureId!,controller.signal)};
    if(controller.signal.aborted)return;
    if(result.status!=='matched'||!result.feature){setMapLookup({target,state:result.status==='ambiguous'?'ambiguous':'not_found'});return;}
    const record=result.feature;
+   if(record.feature_id===selected){setMapLookup(null);if(isMobile)setOpenMobile(true);else setOpen(true);return;}
    setRecords(previous=>[...previous.filter(r=>r.feature_id!==record.feature_id),record]);
-   setSelected(record.feature_id);setMapLookup(null);
+   setSelected(record.feature_id);setQuery('');setMapLookup(null);
+   if(isMobile)setFocusRequest(previous=>({id:record.feature_id,sequence:(previous?.sequence??0)+1}));
    revealRelated();
   }catch{if(!controller.signal.aborted)setMapLookup({target,state:'error'});}
   finally{clearTimeout(loadingTimer);}
@@ -99,6 +108,7 @@ function Atlas(){
   return()=>{clearTimeout(timer);controller.abort();};
  },[query,loading,loadError,searchRetry]);
  const current=records.find(r=>r.feature_id===selected);
+ const peekMeaning=current?.literal_meanings.map(item=>localizedText(item.translations,locale)).find(Boolean)?.text||t('noMeaning');
  useEffect(()=>{
   const sidebar=sidebarRef.current,header=relatedHeaderRef.current;
   if(!current||!sidebar||!header){setRelatedHeaderStuck(false);return;}
@@ -142,8 +152,8 @@ function Atlas(){
   resetRelatedScroll.current=false;
   const frame=requestAnimationFrame(()=>{
    const sidebar=sidebarRef.current,search=searchWrapRef.current,header=relatedHeaderRef.current,list=relatedListRef.current;
-   if(!sidebar||!search||!header||!list)return;
-   sidebar.scrollTop=Math.max(0,sidebar.scrollTop+list.getBoundingClientRect().top-sidebar.getBoundingClientRect().top-search.offsetHeight-header.offsetHeight);
+   if(!sidebar||!header||!list)return;
+   sidebar.scrollTop=Math.max(0,sidebar.scrollTop+list.getBoundingClientRect().top-sidebar.getBoundingClientRect().top-(search?.offsetHeight??0)-header.offsetHeight);
   });
   return()=>cancelAnimationFrame(frame);
  },[connectionMode]);
@@ -152,13 +162,15 @@ function Atlas(){
   if(current)return [current,...(activeSimilar?.results.map(hit=>hit.feature)||[])];
   return [];
  },[query,searchResult,current,activeSimilar,records]);
- function revealRelated(){if(isMobile)setOpenMobile(true);else setOpen(true);}
- function collapsePanel(){if(isMobile)setOpenMobile(false);else setOpen(false);}
- function openSearch(){if(isMobile)setOpenMobile(true);else setOpen(true);requestAnimationFrame(()=>searchInputRef.current?.focus());}
- function closeSearch(){flushSync(()=>setQuery(''));collapsePanel();}
+ function revealRelated(){if(isMobile){setMobileDetailExpanded(false);setOpenMobile(true);}else setOpen(true);}
+ function collapsePanel(){if(isMobile){if(current&&openMobile&&mobileDetailExpanded)setMobileDetailExpanded(false);else setOpenMobile(false);}else setOpen(false);}
+ function openSearch(){if(isMobile){if(current){setSelected(null);setMobileDetailExpanded(false);}setOpenMobile(true);}else setOpen(true);requestAnimationFrame(()=>searchInputRef.current?.focus());}
+ function closeSearch(){flushSync(()=>setQuery(''));if(isMobile)setOpenMobile(false);else setOpen(false);}
  function select(id:string){clearMapLookup();const record=records.find(r=>r.feature_id===id);if(!record)return;setSelected(id);setFocusRequest(previous=>({id,sequence:(previous?.sequence??0)+1}));setQuery('');revealRelated();}
- function backToExplore(){clearMapLookup();setSelected(null);closeSearch();}
- function closeSelected(){clearMapLookup();setSelected(null);setQuery('');collapsePanel();}
+ function locateRelated(id:string){setFocusRequest(previous=>({id,sequence:(previous?.sequence??0)+1,animate:true}));}
+ function backToExplore(){clearMapLookup();setSelected(null);setMobileDetailExpanded(false);closeSearch();}
+ function closeSelected(){clearMapLookup();setSelected(null);setQuery('');setMobileDetailExpanded(false);if(isMobile)setOpenMobile(false);else setOpen(false);}
+ function finishMobileDrag(y:number){if(mobileDragStart.current===null)return;const delta=y-mobileDragStart.current;mobileDragStart.current=null;if(Math.abs(delta)<45)return;ignorePeekClick.current=true;setMobileDetailExpanded(delta<0);setTimeout(()=>{ignorePeekClick.current=false;},350);}
  useEffect(()=>{
   const context=(document as any).modelContext;if(!context?.registerTool)return;
   const lifecycle=new AbortController();
@@ -175,20 +187,30 @@ function Atlas(){
   return()=>lifecycle.abort();
  },[records]);
  return <main className="atlas-app" data-panel-open={panelOpen} lang={locale}>
-  {!panelOpen&&<Button variant="ghost" className="map-search-launch" type="button" onClick={openSearch} aria-label={t('search')} aria-expanded={false} aria-controls="meaning-sidebar"><span className="map-search-launch-icon"><PanelLeft size={19} aria-hidden="true"/></span><span className="map-search-launch-label">{query||(current?nameOf(current):t('search'))}</span><span className="map-search-launch-icon"><Search size={20} aria-hidden="true"/></span></Button>}
+  {(!panelOpen||(isMobile&&!!current&&!mobileDetailExpanded))&&<Button variant="ghost" className="map-search-launch" type="button" onClick={openSearch} aria-label={t('search')} aria-expanded={false} aria-controls="meaning-sidebar"><span className="map-search-launch-icon"><PanelLeft size={19} aria-hidden="true"/></span><span className="map-search-launch-label">{query||(current?nameOf(current):t('search'))}</span><span className="map-search-launch-icon"><Search size={20} aria-hidden="true"/></span></Button>}
   <LanguageSwitcher/>
   <div className="workspace">
-   <Sidebar collapsible="offcanvas" className="atlas-sidebar-shell"><aside ref={sidebarRef} id="meaning-sidebar" className="sidebar" aria-label={t('explore')} inert={!isMobile&&!open}>
-    <div ref={searchWrapRef} className="sidebar-search-wrap"><form className="sidebar-search" onSubmit={e=>{e.preventDefault();setQuery(query.trim());}} role="search">
+   <Sidebar collapsible="offcanvas" className="atlas-sidebar-shell" mobileDetail={isMobile&&!!current} mobileDetailExpanded={mobileDetailExpanded}>
+    {isMobile&&current&&<div className="mobile-detail-peek" onTouchStart={event=>{mobileDragStart.current=event.touches[0].clientY;}} onTouchEnd={event=>finishMobileDrag(event.changedTouches[0].clientY)} onTouchCancel={()=>{mobileDragStart.current=null;}}>
+     <button type="button" className="mobile-detail-summary" aria-expanded={mobileDetailExpanded} aria-controls="meaning-sidebar" onClick={()=>{if(ignorePeekClick.current)return;setMobileDetailExpanded(value=>!value);}}>
+      <span className="mobile-detail-handle" aria-hidden="true"/>
+      <span className="mobile-detail-title"><strong dir="auto">{nameOf(current)}</strong></span>
+      <span className="mobile-detail-meaning" dir="auto">{peekMeaning}</span>
+      <span className="mobile-detail-count">{t('related',{count:relatedHits.length})}</span>
+     </button>
+     <Button variant="ghost" className="current-place-locate related-place-locate" type="button" onClick={()=>locateRelated(current.feature_id)} aria-label={relatedText.locate.replace('{name}',nameOf(current))} title={relatedText.locate.replace('{name}',nameOf(current))}><LocateFixed size={18} aria-hidden="true"/></Button>
+    </div>}
+    <aside ref={sidebarRef} id="meaning-sidebar" className="sidebar" aria-label={t('explore')} inert={!isMobile&&!open}>
+    {(!isMobile||!current)&&<div ref={searchWrapRef} className="sidebar-search-wrap"><form className="sidebar-search" onSubmit={e=>{e.preventDefault();setQuery(query.trim());}} role="search">
      {current?<Button variant="ghost" type="button" aria-label={relatedText.back} title={relatedText.back} onClick={backToExplore}><ChevronLeft size={20}/></Button>
       :<SidebarTrigger type="button" aria-label={t('close')} title={t('close')} aria-expanded={panelOpen} aria-controls="meaning-sidebar"/>}
      <Input ref={searchInputRef} aria-label={t('search')} value={query} maxLength={200} onChange={e=>{clearMapLookup();const value=e.target.value;setQuery(value);setSelected(null);if(!value.trim())closeSearch();}} placeholder={current?nameOf(current):t('search')}/>
      <Button variant="ghost" type="submit" aria-label={t('submit')}><Search size={20}/></Button>
      {(query||current)&&<Button variant="ghost" type="button" aria-label={current?t('closeDetail'):t('clear')} onClick={current?closeSelected:closeSearch}><X size={19}/></Button>}
-    </form></div>
+    </form></div>}
     {current?<>
      <div className="place-hero" aria-hidden="true"/>
-     <PlaceDetail record={current}/>
+     <PlaceDetail record={current} onLocate={()=>locateRelated(current.feature_id)}/>
      <div ref={relatedHeaderRef} className={`related-results-header${relatedHeaderStuck?' is-stuck':''}`}>
       <div className="related-browser-tools">
        <h3 className="related-browser-kicker">{t('related',{count:relatedHits.length})}</h3>
@@ -201,7 +223,7 @@ function Atlas(){
         </fieldset>
        </div>
       </div>
-      {connectionMode==='vector'&&<SimilarityThreshold label={vectorText.threshold} value={minSimilarity} onCommit={setMinSimilarity}/>}
+      {connectionMode==='vector'&&<SimilarityThreshold label={vectorText.threshold} shortLabel={vectorText.score} value={minSimilarity} onCommit={setMinSimilarity}/>}
      </div>
     </>:query.trim()?<div className="result-heading"><span>{t('results')}</span></div>:null}
     {query&&<div className="search-status" role="status">{t(searching?'searching':searchError?'searchError':searchResult?.notice?'negative':'searchLabel')}
@@ -226,6 +248,7 @@ function Atlas(){
          {connectionMode==='vector'&&<small className="related-score">{vectorText.score} {hit.score.toFixed(2)}</small>}
         </span><ArrowUpRight size={15}/>
        </Button>
+       <Button variant="ghost" className="related-place-locate" type="button" onClick={()=>locateRelated(r.feature_id)} aria-label={relatedText.locate.replace('{name}',nameOf(r))} title={relatedText.locate.replace('{name}',nameOf(r))}><LocateFixed size={18} aria-hidden="true"/></Button>
       </div>;
      })
       :<div className="empty-results" role={similarError?'alert':'status'}><strong>{similarLoading?t('searching'):similarError?t('searchError'):vectorUnavailable?vectorText.noVector:similarSelected?t('empty'):t('noMeaning')}</strong>{similarError&&<Button variant="outline" onClick={()=>setSimilarRetry(n=>n+1)}>{t('retry')}</Button>}</div>
@@ -239,8 +262,8 @@ function Atlas(){
     {!loading&&!loadError&&!current&&!!query.trim()&&visible.length>listLimit&&<Button variant="ghost" onClick={()=>setListLimit(n=>n+100)}>{t('more',{shown:listLimit,total:visible.length})}</Button>}
    </aside></Sidebar>
    <section className="map-stage" aria-label={t('map')}>
-    <MapView all={records} visible={visible} selected={selected} focusRequest={focusRequest} onSelect={select} onMapPlace={selectMapPlace} onMapBackgroundClick={collapsePanel} fit={fit} lines={lines} highlightedConnection={lines?highlightedConnection:null}/>
-    <div className="map-tools"><Button variant="ghost" onClick={()=>setFit(n=>n+1)} title={t('fit')} aria-label={t('fit')}><Maximize size={18}/></Button><Button variant="ghost" onClick={()=>setLines(v=>!v)} aria-pressed={lines} title={t('lines')} aria-label={t('lines')} className={lines?'pressed':''}><Link2 size={18}/></Button></div>
+    <MapView all={records} visible={visible} selected={selected} focusRequest={focusRequest} onSelect={select} onMapPlace={selectMapPlace} onMapBackgroundClick={collapsePanel} lines={lines} highlightedConnection={lines?highlightedConnection:null} mobileDetail={isMobile&&current&&openMobile?(mobileDetailExpanded?'expanded':'peek'):'hidden'}/>
+    <div className="map-tools"><Button variant="ghost" onClick={()=>setLines(v=>!v)} aria-pressed={lines} title={t('lines')} aria-label={t('lines')} className={lines?'pressed':''}><Link2 size={18}/></Button></div>
     {mapLookup&&<article className="detail-card" aria-label={t('lookup')} aria-busy={mapLookup.state==='loading'}>
      <div className="detail-topline"><span>{t('lookup')}</span><Button variant="ghost" aria-label={t('closeDetail')} onClick={clearMapLookup}><X size={17}/></Button></div>
      <h2 dir="auto">{mapLookup.target.name}</h2>

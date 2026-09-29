@@ -1,11 +1,14 @@
 'use client';
 import {useLocale} from './locale-provider';
-import {kindName,languageName,localizedText} from '../lib/i18n';
+import {kindName,languageName,localizedText,relatedListLabels} from '../lib/i18n';
 import type {AtlasRecord} from '../lib/feature-model';
 import {MeaningFeedback} from './meaning-feedback';
-export function PlaceDetail({record}:{record:AtlasRecord}){
+import {Button} from './ui/button';
+import {LocateFixed} from 'lucide-react';
+export function PlaceDetail({record,onLocate}:{record:AtlasRecord;onLocate:()=>void}){
  const {locale,t}=useLocale();
  const name=localizedText(record.names,locale);
+ const locateLabel=relatedListLabels[locale].locate.replace('{name}',name?.text||record.feature_id);
  const meanings=record.literal_meanings.map(item=>localizedText(item.translations,locale));
  const original=record.literal_name;
  return <article className="localized-detail sidebar-place-detail" aria-label={`${name?.text||record.feature_id} · ${t('literal')}`}>
@@ -15,6 +18,7 @@ export function PlaceDetail({record}:{record:AtlasRecord}){
     <span className="detail-kind">{kindName(record.kind,locale)}</span>
     {original&&<p className="detail-original"><span>{t('original')}</span><strong dir="auto" lang={original.lang}>{original.text}</strong><span>({languageName(original.lang,locale)})</span></p>}
    </div>
+   <Button variant="ghost" className="current-place-locate related-place-locate" type="button" onClick={onLocate} aria-label={locateLabel} title={locateLabel}><LocateFixed size={18} aria-hidden="true"/></Button>
   </header>
   {name&&name.lang!==locale&&<p className="translation-fallback">{t('fallback',{language:languageName(name.lang,locale)})}</p>}
   <section className="meaning-block"><span>{t('literal')}</span>
