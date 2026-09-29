@@ -67,7 +67,7 @@ function Atlas(){
  const [similarState,setSimilarState]=useState<{key:string;status:'loading'|'ready'|'error';result?:SimilarResponse|VectorSimilarResponse}|null>(null);
  const [similarRetry,setSimilarRetry]=useState(0);
  const mapRequest=useRef<AbortController|null>(null);
- const [mapLookup,setMapLookup]=useState<{target:MapPlaceTarget;state:'loading'|'not_found'|'ambiguous'|'unsupported'|'error'}|null>(null);
+ const [mapLookup,setMapLookup]=useState<{target:MapPlaceTarget;state:'not_found'|'ambiguous'|'unsupported'|'error'}|null>(null);
  useEffect(()=>()=>mapRequest.current?.abort(),[]);
  function clearMapLookup(){mapRequest.current?.abort();setMapLookup(null);}
  async function selectMapPlace(target:MapPlaceTarget){
@@ -79,7 +79,6 @@ function Atlas(){
   }
   if(!target.osm&&!target.featureId){setMapLookup({target,state:'unsupported'});return;}
   const controller=new AbortController();mapRequest.current=controller;
-  const loadingTimer=setTimeout(()=>{if(!controller.signal.aborted)setMapLookup({target,state:'loading'});},200);
   try{
    const result=target.osm?await resolveMapPlace(target.osm,controller.signal):{status:'matched',feature:await loadRecord(target.featureId!,controller.signal)};
    if(controller.signal.aborted)return;
@@ -91,7 +90,7 @@ function Atlas(){
    if(isMobile)setFocusRequest(previous=>({id:record.feature_id,sequence:(previous?.sequence??0)+1}));
    revealRelated();
   }catch{if(!controller.signal.aborted)setMapLookup({target,state:'error'});}
-  finally{clearTimeout(loadingTimer);}
+  finally{if(mapRequest.current===controller)mapRequest.current=null;}
  }
  async function fetchSearch(text:string,signal?:AbortSignal){
   const result=await searchAtlas(text.trim(),'near',signal);
@@ -264,10 +263,10 @@ function Atlas(){
    <section className="map-stage" aria-label={t('map')}>
     <MapView all={records} visible={visible} selected={selected} focusRequest={focusRequest} onSelect={select} onMapPlace={selectMapPlace} onMapBackgroundClick={collapsePanel} lines={lines} highlightedConnection={lines?highlightedConnection:null} mobileDetail={isMobile&&current&&openMobile?(mobileDetailExpanded?'expanded':'peek'):'hidden'}/>
     <div className="map-tools"><Button variant="ghost" onClick={()=>setLines(v=>!v)} aria-pressed={lines} title={t('lines')} aria-label={t('lines')} className={lines?'pressed':''}><Link2 size={18}/></Button></div>
-    {mapLookup&&<article className="detail-card" aria-label={t('lookup')} aria-busy={mapLookup.state==='loading'}>
+    {mapLookup&&<article className="detail-card" aria-label={t('lookup')}>
      <div className="detail-topline"><span>{t('lookup')}</span><Button variant="ghost" aria-label={t('closeDetail')} onClick={clearMapLookup}><X size={17}/></Button></div>
      <h2 dir="auto">{mapLookup.target.name}</h2>
-     <p className="local-name" role={mapLookup.state==='error'?'alert':'status'}>{t(({loading:'lookupLoading',not_found:'notFound',ambiguous:'ambiguous',unsupported:'unsupported',error:'lookupError'} as const)[mapLookup.state])}</p>
+     <p className="local-name" role={mapLookup.state==='error'?'alert':'status'}>{t(({not_found:'notFound',ambiguous:'ambiguous',unsupported:'unsupported',error:'lookupError'} as const)[mapLookup.state])}</p>
      {mapLookup.state==='error'&&<Button variant="outline" onClick={()=>selectMapPlace(mapLookup.target)}>{t('retry')}</Button>}
     </article>}
    </section>
