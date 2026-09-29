@@ -210,3 +210,8 @@
 .feedback-field-error{color:#b43d3d;font-size:12px;font-weight:400;line-height:1.5}
 .feedback-success{display:grid;gap:15px;justify-items:end}.feedback-success p{justify-self:stretch;margin:0;font-size:14px;line-height:1.6}
 @media(max-width:767px){.feedback-entry-row{margin-top:12px}.feedback-sheet .feedback-heading{margin-bottom:4px}.feedback-sheet .feedback-context{margin-bottom:4px}}
+
+.map-github-link{position:absolute;right:42px;bottom:10px;z-index:2;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#fff;color:#111;box-shadow:0 1px 3px #0002}
+.map-github-link svg{width:17px;height:17px;fill:currentColor}
+.map-github-link:hover{background:#eef3fb;color:#315bc9}
+.map-stage:has(.maplibregl-ctrl-attrib.maplibregl-compact-show) .map-github-link{visibility:hidden}
