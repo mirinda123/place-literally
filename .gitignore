@@ -17,6 +17,7 @@
 /.next/
 /.vinext/
 /out/
+/public/maplibre/
 
 # misc
 .DS_Store
@@ -52,3 +53,7 @@ next-env.d.ts
 **/__pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Local deployment inputs and restored snapshot data.
+/deploy/analysis-ik-*.zip
+/deploy/snapshots/

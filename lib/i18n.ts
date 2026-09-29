@@ -1,5 +1,5 @@
 export const languages = [
- {code:'zh',name:'简体中文',short:'中文'}, {code:'en',name:'English',short:'EN'},
+ {code:'en',name:'English',short:'EN'}, {code:'zh',name:'简体中文',short:'中文'},
  {code:'es',name:'Español',short:'ES'}, {code:'fr',name:'Français',short:'FR'},
  {code:'ja',name:'日本語',short:'日本語'},
 ] as const;

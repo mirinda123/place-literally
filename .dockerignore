@@ -1,0 +1,17 @@
+.git
+.next
+.vinext
+.wrangler
+.sites-runtime
+dist
+node_modules
+work
+outputs
+place-literally-es-*.zip
+**/.venv
+**/__pycache__
+**/*.pyc
+.env*
+backend/.env
+deploy/snapshots
+*.tsbuildinfo

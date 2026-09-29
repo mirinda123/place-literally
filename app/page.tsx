@@ -2,9 +2,9 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {ArrowUpRight,ChevronLeft,Link2,Maximize,PanelLeft,Search,X} from 'lucide-react';
 import {flushSync} from 'react-dom';
+import dynamic from 'next/dynamic';
 import {loadAtlas,searchAtlas,loadRecord,resolveMapPlace,similarPlaces,vectorSimilarPlaces,type SearchResponse,type SimilarResponse,type VectorSimilarResponse} from '../lib/atlas-api';
 import type {MapPlaceTarget} from '../lib/map-identity';
-import MapView from './map-view';
 import {Button} from '../components/ui/button';
 import {Input} from '../components/ui/input';
 import {Slider} from '../components/ui/slider';
@@ -15,6 +15,7 @@ import {LanguageSwitcher} from '../components/language-switcher';
 import {PlaceDetail} from '../components/place-detail';
 import {kindName,languageName,localizedText,relatedListLabels,vectorLabels} from '../lib/i18n';
 import {relatedMeanings} from '../lib/related-places';
+const MapView=dynamic(()=>import('./map-view'),{ssr:false});
 export default function Home(){return <LocaleProvider><SidebarProvider className="atlas-provider" defaultOpen={false}><Atlas /></SidebarProvider></LocaleProvider>;}
 function SimilarityThreshold({label,value,onCommit}:{label:string;value:number;onCommit:(value:number)=>void}){
  const [draft,setDraft]=useState(value);

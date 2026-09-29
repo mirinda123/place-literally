@@ -1,0 +1,70 @@
+name: place-literally
+
+services:
+  elasticsearch:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.elasticsearch
+    image: place-literally-elasticsearch:9.5.4
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      node.store.allow_mmap: "false"
+      path.repo: /usr/share/elasticsearch/snapshots
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+      - ./snapshots:/usr/share/elasticsearch/snapshots:ro
+    mem_limit: 2g
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --max-time 8 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    environment:
+      ES_URL: http://elasticsearch:9200
+      ES_INDEX: features-v10
+      ES_FEEDBACK_INDEX: place-feedback-v1
+      CORS_ORIGINS: ""
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+    volumes:
+      - vectorcache:/app/work/vector-query-cache
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  proxy:
+    image: nginx:stable-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
+
+volumes:
+  esdata:
+  vectorcache:

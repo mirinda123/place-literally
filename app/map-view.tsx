@@ -43,7 +43,7 @@ export default function MapView({all,visible,selected,focusRequest,onSelect,onMa
     style=originalStyle.current;
    }catch{if(disposed)return;setOffline(true);}
    if(disposed||!container.current)return;
-   lib.setWorkerUrl(workerUrl);
+   lib.setWorkerUrl(typeof workerUrl==='string'?workerUrl:'/maplibre/maplibre-gl-worker.mjs');
    const instance=new lib.Map({container:container.current,center:[35,25],zoom:Math.max(0,Math.min(1.5,Math.log2(Math.min(container.current.clientWidth-40,container.current.clientHeight-180)/180))),minZoom:0,maxZoom:20,renderWorldCopies:false,attributionControl:false,canvasContextAttributes:{antialias:true},style});
    map.current=instance;
    // Follow actual viewport/container changes; the overlay drawer leaves these unchanged.

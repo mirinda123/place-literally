@@ -11,7 +11,7 @@ test('requested language wins; missing translation carries its actual fallback l
 });
 test('five selectable languages have complete UI copy; Korean copy stays available for later',()=>{
  const keys=Object.keys(messages.en);
- assert.deepEqual(languages.map(language=>language.code),['zh','en','es','fr','ja']);
+ assert.deepEqual(languages.map(language=>language.code),['en','zh','es','fr','ja']);
  for(const code of [...languages.map(language=>language.code),'ko'] as const){
   assert.deepEqual(Object.keys(messages[code]).sort(),[...keys].sort());
   for(const key of keys as (keyof typeof messages.en)[]){

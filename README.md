@@ -19,6 +19,8 @@ npm run dev
 
 Open http://localhost:5173/. The full Elasticsearch dataset is not included in this repository.
 
+For a Linux server build and Elasticsearch snapshot restore, see [server deployment](deploy/README.md).
+
 ## Checks
 
 Run `npm test` for frontend tests and `npm run build` to build the app.
