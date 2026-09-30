@@ -18,8 +18,8 @@ from .indexing import Feature, SCHEMA
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "literal_meanings.txt"
 DEFAULT_LANGUAGES = ["zh", "en", "ja", "fr", "es"]
-DEFAULT_MODEL = "gpt-6-sol"
-DEFAULT_REASONING = "high"
+DEFAULT_MODEL = "gpt-6.1-sol"
+DEFAULT_REASONING = "xhigh"
 FILLER_PREFIX = re.compile(r"^(?:可能意为|可能是|另一种说法|另一种解释|也可能意为|may mean|possibly means|another interpretation|alternatively\s*[:,])", re.I)
 KINDS = {"country": ["country"], "city": ["city"], "town": ["town"],
          "state": ["state", "province"],
@@ -207,9 +207,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--kind", choices=KINDS, default="country", help="settlement includes cities/towns; selected accepts explicit IDs across kinds")
     parser.add_argument("--languages", type=parse_languages, default=DEFAULT_LANGUAGES)
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="Exact Codex model ID (default: gpt-6-sol)")
+    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Exact Codex model ID (default: {DEFAULT_MODEL})")
     parser.add_argument("--reasoning-effort", choices=["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"],
-                        default=DEFAULT_REASONING, help="Reasoning effort (default: high); support depends on the model")
+                        default=DEFAULT_REASONING, help=f"Reasoning effort (default: {DEFAULT_REASONING}); support depends on the model")
     parser.add_argument("--codex-bin", default="codex", help="CLI executable name or absolute path")
     parser.add_argument("--feature-id", action="append", help="Restrict to specific feature IDs; repeatable")
     parser.add_argument("--feature-id-file", type=Path, help="JSON array of feature IDs; combine with --kind selected for mixed kinds")

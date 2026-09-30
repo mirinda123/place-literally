@@ -113,7 +113,7 @@ def test_cli_uses_stdin_and_schema_in_an_isolated_directory(monkeypatch, doc):
     def run(command, **kwargs):
         assert command[:3] == ["codex.exe", "--search", "exec"] and command[-1] == "-"
         assert command[command.index("--model") + 1] == "chosen-model"
-        assert command[command.index("-c") + 1] == 'model_reasoning_effort="high"'
+        assert command[command.index("-c") + 1] == 'model_reasoning_effort="xhigh"'
         assert command[command.index("--sandbox") + 1] == "workspace-write"
         assert "--ignore-user-config" in command
         assert kwargs["shell"] is False and "ES_PASSWORD" not in kwargs["env"]

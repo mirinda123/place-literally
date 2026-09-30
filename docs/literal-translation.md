@@ -9,7 +9,7 @@
 
 ## 第一期：国家、五种语言
 
-默认类型为 `country`，默认语言为 `zh,en,ja,fr,es`，默认模型为 `gpt-6-sol`，推理强度为 `high`。
+默认类型为 `country`，默认语言为 `zh,en,ja,fr,es`，默认模型为 `gpt-6.1-sol`，推理强度为 `xhigh`。模型说明见 [OpenAI 官方文档](https://developers.openai.com/api/docs/models/gpt-6.1-sol)。
 先预览选中了多少地点、不调用模型也不写入 ES：
 
 ```powershell
@@ -52,8 +52,8 @@ backend\.venv\Scripts\python.exe -m backend.translate_meanings --kind country --
 | --- | --- |
 | `--kind` | `country`；可选 `city`、`town`、`settlement`（city/town/metropolis）、`state`（state/province）、`selected`（仅指定 ID，可跨类型） |
 | `--languages` | `zh,en,ja,fr,es`；逗号分隔语言标签，最多 20 个 |
-| `--model` | 精确模型 ID，默认 `gpt-6-sol` |
-| `--reasoning-effort` | 默认 `high`；其他可用强度取决于所选模型 |
+| `--model` | 精确模型 ID，默认 `gpt-6.1-sol` |
+| `--reasoning-effort` | 默认 `xhigh`；其他可用强度取决于所选模型 |
 | `--feature-id` | 指定 ES 的 feature_id，可重复传入；仍受 kind 筛选 |
 | `--feature-id-file` | JSON 格式的 feature_id 数组；`--kind selected` 时必须指定 ID |
 | `--guidance-file` | 可选的批次专用核实规则，连同通用 Prompt 保存到运行目录并参与缓存键 |

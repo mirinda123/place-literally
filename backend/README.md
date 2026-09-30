@@ -123,9 +123,9 @@ backend\.venv\Scripts\python.exe -m backend.configure_similarity_fields
 
 ## 字面含义翻译
 
-`python -m backend.translate_meanings` 使用本机已登录的 Codex CLI，默认生成国家的 `zh,en,ja,fr,es` 字面含义草稿。
+`python -m backend.translate_meanings` 使用本机已登录的 Codex CLI，默认用 `gpt-6.1-sol`、`xhigh` 推理强度生成国家的 `zh,en,ja,fr,es` 字面含义草稿。
 支持类型、语言、模型、限量试跑、缓存续跑、重试和可选 ES 写入；默认筛选有缺失语言的地点，同时核对并可修正所选语言的已有释义。用 `--review-existing` 可复核已完整翻译的地点。
-对全部国家（包括已有释义）重新生成并写入：`python -m backend.translate_meanings --kind country --languages zh,en,ja,fr,es --model gpt-6-sol --reasoning-effort high --review-existing --apply --timeout 600`。相同 `--output-dir` 可复用成功草稿继续运行；每个已写入地点在当次 `runs/<时间>/backups/` 有原文档备份。
+对全部国家（包括已有释义）重新生成并写入：`python -m backend.translate_meanings --kind country --languages zh,en,ja,fr,es --model gpt-6.1-sol --reasoning-effort xhigh --review-existing --apply --timeout 600`。相同 `--output-dir` 可复用成功草稿继续运行；每个已写入地点在当次 `runs/<时间>/backups/` 有原文档备份。
 先用 `--dry-run` 查看计划，使用方法和 Prompt 规则见 [批量翻译说明](../docs/literal-translation.md)。
 中国 34 个省级地名批次使用 `--kind selected --feature-id-file` 跨 `state`、`city`、`country` 三种既有地图标签类型，采集和复跑步骤见 [中国省级地名批次](../docs/osm-china-regions.md)。
 
