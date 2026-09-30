@@ -57,8 +57,6 @@ delete an existing data volume merely to retry these commands.
 ## Start
 
 ```sh
-# Optional: set this server-side secret to enable vector similarity queries.
-export DASHSCOPE_API_KEY='your-key'
 docker compose -f deploy/compose.yml up -d api web proxy gateway
 curl -fsS 'http://127.0.0.1/atlas-api/map-features?limit=1'
 ```
@@ -72,7 +70,9 @@ direct-IP HTTP access remains available for diagnostics.
 
 The frontend calls `/atlas-api/*` on the same origin. Nginx forwards those
 requests to FastAPI's `/api/*`; neither Elasticsearch nor FastAPI has a public
-port. The vector cache uses a named volume and survives container replacement.
+port. Vector similarity uses the precomputed vectors in Elasticsearch and needs
+no model API key or query cache. A model key is only needed for offline embedding
+generation when adding or updating meanings.
 Nginx limits feedback and vector requests per client IP. The feedback endpoint
 remains anonymous; add public-edge abuse controls before inviting visitors to
 submit feedback.

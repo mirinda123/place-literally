@@ -6,7 +6,7 @@
 
 > Given the literal meaning of a place name, find countries and cities whose names have a similar literal meaning.
 
-写入索引的 document 向量不带 instruct。试跑结束时，脚本额外为中国第一条中文释义生成一个带 instruct 的 query 向量，计算它与本次 20 个地点的中文 document 向量的余弦相似度，报告前五名。默认 `/similar` 仍使用文本搜索；前端切到「向量」才调用 `/vector-similar`，用同一个 instruct 生成当前语言的 query 向量。
+写入索引的 document 向量不带 instruct。试跑结束时，脚本额外为中国第一条中文释义生成一个带 instruct 的 query 向量，计算它与本次 20 个地点的中文 document 向量的余弦相似度，报告前五名；这仅是离线试验探针。默认 `/similar` 仍使用文本搜索；前端切到「向量」才调用 `/vector-similar`，直接比较 ES 中双方已预处理的 document 向量，在线查询不调用模型。下文历史审计中的 query/document 分数不能直接当作文档向量互相比的校准结果。
 
 在项目根目录运行：
 

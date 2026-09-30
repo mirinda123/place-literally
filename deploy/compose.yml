@@ -38,9 +38,6 @@ services:
       ES_INDEX: features-v10
       ES_FEEDBACK_INDEX: place-feedback-v1
       CORS_ORIGINS: ""
-      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
-    volumes:
-      - vectorcache:/app/work/vector-query-cache
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -80,6 +77,5 @@ services:
 
 volumes:
   esdata:
-  vectorcache:
   caddy_data:
   caddy_config:

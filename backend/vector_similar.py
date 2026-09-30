@@ -1,33 +1,13 @@
-"""Exact, interpretation-level vector links for the small embedding pilot."""
+"""Exact, symmetric interpretation-level links using precomputed ES vectors."""
 
-import os
-from threading import Lock
-
-from .config import ROOT
-from .embed_meanings import (DEFAULT_ENDPOINT, DEFAULT_INSTRUCT, DIMENSIONS,
-                             EmbeddingClient, validate_vector)
+from .embed_meanings import validate_vector
 from .indexing import EMBEDDING_FIELD, PUBLIC_SOURCE_EXCLUDES
 from .similar import PAGE_SIZE, SimilarLanguage
 
 
-class QueryEmbeddingService:
-    """Share the query cache safely across FastAPI's worker threads."""
-
-    def __init__(self):
-        self._client = EmbeddingClient(
-            ROOT / "work" / "vector-query-cache",
-            os.getenv("DASHSCOPE_EMBEDDING_URL", DEFAULT_ENDPOINT),
-            DEFAULT_INSTRUCT, batch_size=20)
-        self._lock = Lock()
-
-    def embed(self, texts: list[str]) -> dict[str, list[float]]:
-        with self._lock:
-            return self._client.embed(texts, "query")
-
-
 def vector_similar_places(client, index: str, origin: dict, lang: SimilarLanguage,
-                          min_similarity: float, embed_queries, page_size: int = PAGE_SIZE):
-    """Return every place above the raw cosine threshold, using one sense at a time."""
+                          min_similarity: float, page_size: int = PAGE_SIZE):
+    """Compare stored vectors and keep the best sense pair above the cosine threshold."""
     response = {"feature_id": origin["feature_id"], "lang": lang, "engine": "vector",
                 "min_similarity": min_similarity, "available": False, "total": 0, "results": []}
     source = []
@@ -35,21 +15,16 @@ def vector_similar_places(client, index: str, origin: dict, lang: SimilarLanguag
         text = meaning.get("translations", {}).get(lang)
         vector = meaning.get(EMBEDDING_FIELD, {}).get(lang)
         if isinstance(text, str) and text.strip() and vector is not None:
-            validate_vector(vector)
-            source.append((source_index, text))
+            source.append((source_index, validate_vector(vector)))
     if not source:
         return response
     response["available"] = True
-    vectors = embed_queries([text for _, text in source])
     field = f"literal_meanings.{EMBEDDING_FIELD}.{lang}"
     script = f"cosineSimilarity(params.vector, '{field}') + 1.0"
     best_by_id = {}
     pit = client.open_point_in_time(index=index, keep_alive="1m")["id"]
     try:
-        for source_index, text in source:
-            vector = vectors[text]
-            if len(vector) != DIMENSIONS:
-                raise ValueError("Query embedding dimensions do not match the index")
+        for source_index, vector in source:
             query = {"bool": {
                 "must_not": [{"term": {"feature_id": origin["feature_id"]}}],
                 "must": [{"nested": {"path": "literal_meanings", "score_mode": "max",

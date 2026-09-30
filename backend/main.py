@@ -12,7 +12,7 @@ from .feedback import FeedbackRequest, build_feedback_document, save_feedback
 from .indexing import PUBLIC_SOURCE_EXCLUDES
 from .search import SearchRequest, run_search
 from .similar import SimilarLanguage, similar_places
-from .vector_similar import QueryEmbeddingService, vector_similar_places
+from .vector_similar import vector_similar_places
 
 
 def create_app(settings: Settings | None = None):
@@ -21,7 +21,6 @@ def create_app(settings: Settings | None = None):
     @asynccontextmanager
     async def lifespan(app):
         app.state.es = connect(settings)
-        app.state.query_embeddings = QueryEmbeddingService()
         try:
             yield
         finally:
@@ -153,10 +152,9 @@ def create_app(settings: Settings | None = None):
         client = request.app.state.es
         origin = get_feature(client, feature_id, include_vectors=True)
         try:
-            return vector_similar_places(client, settings.index, origin, lang, min_similarity,
-                request.app.state.query_embeddings.embed)
-        except (RuntimeError, ValueError) as exc:
-            raise HTTPException(503, "向量搜索暂不可用，请检查模型服务后重试。") from exc
+            return vector_similar_places(client, settings.index, origin, lang, min_similarity)
+        except ValueError as exc:
+            raise HTTPException(503, "向量数据暂不可用，请检查已保存的释义向量后重试。") from exc
 
     return app
 

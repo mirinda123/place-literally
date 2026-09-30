@@ -123,8 +123,33 @@ def test_embedding_vectors_do_not_enter_public_responses(live):
         client.delete(index=settings.index, id=feature_id, refresh="wait_for")
 
 
-def test_vector_similar_exact_multisense_and_all_pages(live):
+def test_vector_similar_invalid_stored_vector_is_service_error(monkeypatch):
+    class InvalidVectorClient:
+        def get(self, **options):
+            assert options["source_exclude_vectors"] is False
+            return {"_source": {"feature_id": "invalid-vector", "literal_meanings": [{
+                "translations": {"en": "test city"}, EMBEDDING_FIELD: {"en": [0.0] * 512}}]}}
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr("backend.main.connect", lambda _settings: InvalidVectorClient())
+    with TestClient(create_app(Settings())) as api:
+        response = api.get("/api/features/invalid-vector/vector-similar", params={"lang": "en"})
+        assert response.status_code == 503
+        assert "向量数据" in response.json()["detail"]
+
+
+def test_vector_similar_exact_multisense_and_all_pages(live, monkeypatch):
     api, client, settings = live
+    from backend.embed_meanings import EmbeddingClient
+
+    def forbid_embedding(*_args, **_kwargs):
+        pytest.fail("Place similarity must use stored vectors, never call an embedding model")
+
+    monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
+    monkeypatch.setattr(EmbeddingClient, "embed", forbid_embedding)
+    monkeypatch.setattr(EmbeddingClient, "_request", forbid_embedding)
     one = [1.0] + [0.0] * 511
     two = [0.0, 1.0] + [0.0] * 510
     three = [0.0, 0.0, 1.0] + [0.0] * 509
@@ -152,9 +177,6 @@ def test_vector_similar_exact_multisense_and_all_pages(live):
     for doc in docs:
         client.index(index=settings.index, id=doc["feature_id"], document=doc)
     client.indices.refresh(index=settings.index)
-    service = api.app.state.query_embeddings
-    original_embed = service.embed
-    service.embed = lambda texts: {text: one if text.startswith("first") else two for text in texts}
     try:
         for lang in langs:
             response = api.get("/api/features/vector-origin/vector-similar",
@@ -169,23 +191,32 @@ def test_vector_similar_exact_multisense_and_all_pages(live):
             assert results["vector-river"]["matched_meaning_index"] == 1
             assert abs(results["vector-state"]["score"] - 0.8) < 0.002
             assert EMBEDDING_FIELD not in response.text
+            for feature_id, forward in results.items():
+                reverse_response = api.get(f"/api/features/{feature_id}/vector-similar",
+                                           params={"lang": lang, "min_similarity": 0.6})
+                assert reverse_response.status_code == 200, reverse_response.text
+                reverse = next(item for item in reverse_response.json()["results"]
+                               if item["feature"]["feature_id"] == "vector-origin")
+                assert reverse["score"] == forward["score"]
+                assert reverse["source_meaning_index"] == forward["matched_meaning_index"]
+                assert reverse["matched_meaning_index"] == forward["source_meaning_index"]
+            stricter = api.get("/api/features/vector-origin/vector-similar",
+                               params={"lang": lang, "min_similarity": 0.81}).json()
+            assert {item["feature"]["feature_id"] for item in stricter["results"]} == {
+                "vector-country", "vector-river"}
         origin = client.get(index=settings.index, id="vector-origin",
                             source_exclude_vectors=False)["_source"]
-        paged = vector_similar_places(client, settings.index, origin, "zh", 0.6,
-                                      service.embed, page_size=2)
+        paged = vector_similar_places(client, settings.index, origin, "zh", 0.6, page_size=2)
         assert paged["total"] == 3
-        service.embed = lambda _texts: (_ for _ in ()).throw(RuntimeError("provider unavailable"))
         assert api.get("/api/features/vector-empty/vector-similar").json()["available"] is False
         assert api.get("/api/features/vector-partial/vector-similar",
                        params={"lang": "zh"}).json()["available"] is False
-        assert api.get("/api/features/vector-origin/vector-similar").status_code == 503
         assert api.get("/api/features/vector-missing/vector-similar").status_code == 404
         assert api.get("/api/features/vector-origin/vector-similar",
                        params={"lang": "ko"}).status_code == 422
         assert api.get("/api/features/vector-origin/vector-similar",
                        params={"min_similarity": 1.1}).status_code == 422
     finally:
-        service.embed = original_embed
         for doc in docs:
             client.delete(index=settings.index, id=doc["feature_id"], refresh="wait_for")
 
@@ -615,6 +646,7 @@ def test_missing_index_is_service_error(live):
     with TestClient(create_app(settings)) as api:
         assert api.get("/api/search",params={"query":"新城"}).status_code==503
         assert api.get("/api/features/unknown").status_code==503
+        assert api.get("/api/features/unknown/vector-similar").status_code==503
         assert api.get("/api/features/resolve",params={"osm":"node/244081381"}).status_code==503
 
 
