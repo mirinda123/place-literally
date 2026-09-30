@@ -15,9 +15,11 @@ SCHEMA = "literal-name-map-features-v4"
 EMBEDDING_FIELD = "embeddings_qwen3_7_text_embedding_512_v1"
 EMBEDDING_LANGUAGES = ("zh", "en", "ja", "fr", "es")
 PUBLIC_SOURCE_EXCLUDES = [f"literal_meanings.{EMBEDDING_FIELD}"]
+SIMILAR_TERMS_VERSION = 1
+SIMILAR_ANALYZERS = {lang: f"similar_{lang}_v3" for lang in EMBEDDING_LANGUAGES}
 
-# Query-only analyzers for /similar. They are selected explicitly in its match
-# queries, so ordinary search and the indexed field analyzers stay unchanged.
+# /similar uses these analyzers for both its dedicated .similar subfields and
+# request-side token sets. Ordinary search keeps the original field analyzers.
 STOPWORDS_DIR = Path(__file__).resolve().parent / "stopwords"
 
 
@@ -155,10 +157,18 @@ def index_mapping(analyzer):
         return mapping
     def name_text(kind):
         return {**text(kind), "copy_to": "search_names"}
+    def similar_text(lang, kind, search_analyzer=None):
+        field = text(kind, search_analyzer)
+        # Dedicated similarity subfields use the same analyzer and stop words
+        # for indexing and queries, making shared-term sets symmetric without
+        # changing the original full-text fields or business _source.
+        field["fields"]["similar"] = {"type": "text", "analyzer": SIMILAR_ANALYZERS[lang]}
+        return field
     return {
         "_meta": {"schema": SCHEMA, "analyzer": analyzer,
                   "zh_meaning_analyzer": "ik_max_word", "zh_meaning_search_analyzer": "ik_smart",
-                  "en_meaning_analyzer": "english_no_stop", "ja_meaning_analyzer": "kuromoji"},
+                  "en_meaning_analyzer": "english_no_stop", "ja_meaning_analyzer": "kuromoji",
+                  "similar_terms_version": SIMILAR_TERMS_VERSION},
         "dynamic": "strict",
         "dynamic_templates": [
             {"chinese_names": {"path_match": "names.zh*", "match_mapping_type": "string", "mapping": name_text(analyzer)}},
@@ -177,7 +187,13 @@ def index_mapping(analyzer):
             "literal_name": {"type": "object", "dynamic": "strict", "properties": {
                 "text": text(analyzer), "lang": {"type": "keyword"}}},
             "literal_meanings": {"type": "nested", "dynamic": "strict", "properties": {
-                "translations": {"type": "object", "dynamic": True},
+                "translations": {"type": "object", "dynamic": True, "properties": {
+                    "zh": similar_text("zh", "ik_max_word", "ik_smart"),
+                    "en": similar_text("en", "english_no_stop"),
+                    "ja": similar_text("ja", "kuromoji"),
+                    "fr": similar_text("fr", "standard"),
+                    "es": similar_text("es", "standard"),
+                }},
                 EMBEDDING_FIELD: {"type": "object", "dynamic": "strict", "properties": {
                     lang: {"type": "dense_vector", "dims": 512, "index": True, "similarity": "cosine"}
                     for lang in EMBEDDING_LANGUAGES}},
@@ -224,6 +240,39 @@ def ensure_name_search(client, settings):
             raise ValueError("Name search migration needs retry; concurrent writes or indexing failures occurred")
 
 
+def ensure_similarity_fields(client, index: str):
+    """Backfill additive similarity subfields; never change meaning text or generate vectors."""
+    mapping = client.indices.get_mapping(index=index)[index]["mappings"]
+    meta = mapping.get("_meta", {})
+    fields = mapping["properties"]["literal_meanings"]["properties"]["translations"].get("properties", {})
+    ready = all(fields.get(lang, {}).get("fields", {}).get("similar", {}).get("analyzer") == analyzer
+                for lang, analyzer in SIMILAR_ANALYZERS.items())
+    if ready and meta.get("similar_terms_version") == SIMILAR_TERMS_VERSION:
+        return {"index": index, "action": "already_configured", "updated": 0}
+    desired = index_mapping(meta.get("analyzer", "cjk"))["properties"]["literal_meanings"]["properties"]["translations"]["properties"]
+    additions = {}
+    for lang, analyzer in SIMILAR_ANALYZERS.items():
+        field = fields.get(lang, desired[lang])
+        existing = field.get("fields", {}).get("similar")
+        if existing and existing.get("analyzer") != analyzer:
+            raise ValueError(f"The {lang} similarity field uses another analyzer; use a new index")
+        additions[lang] = {**field, "fields": {**field.get("fields", {}), "similar": desired[lang]["fields"]["similar"]}}
+    client.indices.put_mapping(index=index, properties={"literal_meanings": {"type": "nested", "properties": {
+        "translations": {"type": "object", "properties": additions}}}})
+    # Adding multi-fields does not populate their inverted index for old docs.
+    # A script-free update_by_query reindexes existing content. Mark it ready
+    # only after success; interruptions or concurrent-write conflicts can retry.
+    eligible = {"bool": {"should": [{"exists": {"field": f"literal_meanings.translations.{lang}"}}
+                                     for lang in SIMILAR_ANALYZERS], "minimum_should_match": 1}}
+    result = client.options(request_timeout=120).update_by_query(index=index,
+        query={"nested": {"path": "literal_meanings", "query": eligible}},
+        scroll_size=200, conflicts="abort", refresh=True)
+    if result.get("failures") or result.get("version_conflicts") or result.get("timed_out"):
+        raise ValueError("Similarity field migration needs retry; concurrent writes or indexing failures occurred")
+    client.indices.put_mapping(index=index, meta={**meta, "similar_terms_version": SIMILAR_TERMS_VERSION})
+    return {"index": index, "action": "configured", "updated": result["updated"]}
+
+
 def import_seed(client, settings, features):
     docs = documents(features)
     if len({d["feature_id"] for d in docs}) != len(docs):
@@ -234,8 +283,13 @@ def import_seed(client, settings, features):
     client.indices.analyze(analyzer="kuromoji", text="新しい町")
     if client.indices.exists(index=settings.index):
         current = client.indices.get_mapping(index=settings.index)[settings.index]["mappings"]
-        if current.get("_meta") != mapping["_meta"]:
+        current_meta = {key: value for key, value in current.get("_meta", {}).items()
+                        if key != "similar_terms_version"}
+        expected_meta = {key: value for key, value in mapping["_meta"].items()
+                         if key != "similar_terms_version"}
+        if current_meta != expected_meta:
             raise ValueError("Existing index has another schema; use a new ES_INDEX")
+        ensure_similarity_fields(client, settings.index)
         # Additive migration: preserve existing documents and analyzers.
         client.indices.put_mapping(index=settings.index, properties={
             "external_ids": mapping["properties"]["external_ids"]})

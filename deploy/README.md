@@ -57,9 +57,15 @@ delete an existing data volume merely to retry these commands.
 ## Start
 
 ```sh
+docker compose -f deploy/compose.yml run --rm --no-deps api python -m backend.configure_similarity_fields
 docker compose -f deploy/compose.yml up -d api web proxy gateway
 curl -fsS 'http://127.0.0.1/atlas-api/map-features?limit=1'
 ```
+
+Run the first command after restoring an older snapshot or upgrading an existing
+index. It adds and backfills the lexical similarity subfields, preserving meaning
+text and stored vectors. It is safe to repeat and does not call a model. New
+documents are indexed with these fields automatically.
 
 The default public hostname is `place-literally.duckdns.org`; set
 `PUBLIC_DOMAIN` in the Compose environment to use another hostname. Point its

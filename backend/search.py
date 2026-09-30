@@ -57,19 +57,22 @@ def group_query(concepts, scope):
                                 {"terms": {"feature_id": feature_ids}}], "minimum_should_match": 1}}
 
 
-def build_query(request):
+def build_query(request, meaning_fields):
     concepts = query_concepts(request.query)
     def meaning_query(field, boost, name, **options):
+        fields = [f"literal_meanings.translations.*{field}"] if field else meaning_fields
+        if not fields:
+            return {"match_none": {}}
         return {"nested": {"path": "literal_meanings", "score_mode": "max",
             "query": {"multi_match": {"query": request.query,
-                "fields": [f"literal_meanings.translations.*{field}"],
+                "fields": fields,
                 "boost": boost, **options}}, "_name": name}}
     should = [
         {"multi_match": {"query": request.query, "fields": ["search_names.raw", "literal_name.text.raw"],
                          "boost": 100, "_name": "exact_name"}},
         meaning_query(".raw", 20, "exact_meaning"),
     ]
-    # Chinese users commonly omit the administrative 市 suffix. Prefer the
+    # Chinese users commonly omit the administrative city suffix (U+5E02). Prefer the
     # complete city name over a longer unrelated label containing the query.
     if re.fullmatch(r"[\u3400-\u9fff]{2,12}", request.query) and not request.query.endswith("市"):
         should.append({"constant_score": {"filter": {"term": {"search_names.raw": request.query + "市"}},
@@ -101,7 +104,15 @@ def run_search(client, settings, request):
     if re.search(r"不要|不含|没有|不是|without|\bnot\b", request.query, re.I):
         response["notice"] = "当前暂不解析否定条件，请使用正向含义描述。"
         return response
-    found = client.search(index=settings.index, query=build_query(request), size=request.limit,
+    meaning_fields = []
+    if request.scope != "exact":
+        capabilities = client.field_caps(index=settings.index, fields=["literal_meanings.translations.*"])
+        # Ordinary search explicitly uses the original translation fields and
+        # .raw. Wildcards must not pull in .similar's different stop-word rules.
+        # Read mapped languages so new ones need no hardcoding or API restart.
+        meaning_fields = sorted(field for field in capabilities["fields"]
+                                if field.count(".") == 2 or field.endswith(".raw"))
+    found = client.search(index=settings.index, query=build_query(request, meaning_fields), size=request.limit,
                           from_=request.offset, track_total_hits=True,
                           sort=[{"_score": "desc"}, {"feature_id": "asc"}],
                           source_excludes=PUBLIC_SOURCE_EXCLUDES)

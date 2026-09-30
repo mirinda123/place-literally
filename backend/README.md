@@ -35,7 +35,7 @@ docker exec elasticsearch-local /usr/share/elasticsearch/bin/elasticsearch-plugi
 
 安装版本必须与 ES 一致；重启后列表应同时包含 `analysis-ik` 和 `analysis-kuromoji`。仅 `docker restart` 现有容器不需要重装。从 v3 升级时先运行 `backend\.venv\Scripts\python.exe -m backend.reindex_v4`，再运行 `backend\.venv\Scripts\python.exe -m backend.reindex_search_v5`；如果 v4 已存在，仅运行后一步。v5 复制 v4 的完整文档并验证数量与抽样内容，v4 保留供回退。要回退搜索配置，可将 `ES_INDEX=features-v4` 并使用对应旧版后端代码。已有 v1/v2 数据的旧迁移脚本仍以 v4 为目标，之后需依次复制到 v5、v6、v7 和 v8。空库可以执行 `backend\.venv\Scripts\python.exe -m backend.indexing` 导入 11 条初始示例；切勿在已编辑的正式数据上随意重跑，以免覆盖同 ID 的释义。
 
-`/similar` 使用只在该接口查询中指定的 ES 分析器；停用词源文件位于 `backend/stopwords/similar_*.txt`，建索引时由 `backend/indexing.py` 读入 ES 设置。v8 还过滤「地方／place／場所／lieu／lugar」等泛用地点词，不影响普通搜索的分词。现有 v4 的旧版分析器仍可由 `backend.configure_similar_analyzers` 初始化；不能只修改代码中的停用词就让现有索引使用新版分析器，因此现有索引不会因修改项目中的文本文件而自动更新。
+`/similar` 使用专用的 `.similar` 子字段和 `similar_<语言>_v3` 分析器，索引和查询采用相同规则。停用词源文件位于 `backend/stopwords/similar_*.txt`，建索引时由 `backend/indexing.py` 读入 ES 设置，过滤泛用国家、城市、土地和地点称谓，不影响普通搜索。不能只修改代码中的停用词就让现有索引使用新版分析器。
 从现有 v8 升级：`backend\.venv\Scripts\python.exe -m backend.reindex_embeddings_v9`。这会新建 features-v9，复制并核对全部文档，仅保留 qwen3.7-text-embedding 的向量字段；v8 保留供回退。
 
 从现有 v9 升级：`backend\.venv\Scripts\python.exe -m backend.reindex_search_v10`。脚本新建 features-v10，完整复制文档与向量并验证数量和分析器；v9 保留供回退。`/similar` 的查询停用词只新增表示位置关系的英语 `by/beside/near`、法语 `au/aux`、西语 `al/junto`，保留「河／川／river／río」等实义词。这样「河边」的连接词本身不会为曼彻斯特和伦敦凑足多语言票数。已有 v10 时脚本不会覆盖，需为再次修改选择新的索引名。
@@ -46,7 +46,24 @@ docker exec elasticsearch-local /usr/share/elasticsearch/bin/elasticsearch-plugi
 
 从现有 v5 升级：`backend\.venv\Scripts\python.exe -m backend.reindex_search_v6`。脚本新建 v6、复制全文档、核对数量及五语分词；v5 保留作回退。修改 `backend/stopwords/similar_*.txt` 后，需要新建下一版索引并切换 `ES_INDEX`，不必重跑 AI 翻译。这里将词表内容写入 ES 索引设置，**不需要复制进 Docker 容器**。如果改用 ES 的 `stopwords_path` 文件模式，文件必须位于每个 ES 节点的 config 目录；仅复制文件不会让正在运行的 `stop` 过滤器热加载，需受控重开索引或重启节点。`_reload_search_analyzers` 的热重载适用于可更新的同义词过滤器，不能假定它会更新普通停用词。
 
-`/similar` 对每条源释义的可用语言分别执行 ES nested `match`（OR）。每种语言用 `minimum_should_match="2<-50%"`：分词后不超过两个词时要求全部命中，更多词时允许缺少一半（向下取整）；仅剩一个词时 ES 最多要求一个。候选的同一条释义仍须至少得到两种语言支持。每种语言由 ES `constant_score` 记一票，响应 `score` 为票数；没有 Python 侧的 55% 分数门槛。此查询参数可直接调整，无需重建索引。
+已有 features-v10 在运行新版后端前执行一次：
+
+```powershell
+backend\.venv\Scripts\python.exe -m backend.configure_similarity_fields
+```
+
+命令为五语释义增加 `.similar` 子字段，重新索引旧文档后才标记就绪；原释义和已有向量保留，不调用模型。命令可重复运行，未完成时可重试。空库导入会自动配置；未配置的旧索引在请求 `/similar` 时返回 503，避免默默漏掉候选。
+
+`/similar` 分两步建立对称关联，算法与英文注释在 `backend/similar.py`：
+
+- **粗筛**：分词、去停用词和泛用词并去重。每种语言有有效词时查询 `.similar` 的共有词；没有有效词时查询 `.raw` 的完整短语。同一条候选释义至少获得两种语言支持，PIT 分页取全，不截取 Top N。
+- **细筛**：按同一对释义分别判断 A→B 和 B→A。有有效词时，源释义有 1–2 词要求全中，更多词要求命中 `ceil(n/2)`。没有有效词时，两侧完整短语必须相同，才同时支持两个方向。每个方向独立统计语言票数；任一方向达到两票就关联，`score=max(正向票数,反向票数)`。不得跨方向或跨释义拼票。
+
+额外的低信息词表在 `backend/stopwords/similar_low_information.json`，存储分析器输出的词（包括英语词干）。后端在原分词结果上去除介词、冠词和泛用地点称谓，两侧使用同一规则；原 `.similar` 索引作为候选召回的超集，因此修改此词表只需重启后端，不需要重建 ES 或向量。原始释义始终保留。例如，`In the City` 过滤后为空，仍能用完整短语关联另一个 `In the City`，但不会仅凭 `in` 关联 `Shelter in the marshes`。
+
+完整短语使用现有 `.raw` 的 `name_fold` 规范化，忽略大小写和重音差异，保留语序、标点与空格；这是严格匹配，不判断不同说法是否语义等价。空词集合之间不会自动匹配。粗筛和细筛使用同一规范化结果，避免再次引入方向差异。
+
+多条释义逐对判断，每个地点只返回最高分的一对；并列时按地点 ID 和释义序号固定排序，使反向查询选择同一对。界面语言只决定显示，五语共同参与判断。分词和短语规范化结果在进程内按原文缓存，不预计算地点关系，也不调用模型。同一数据版本下，关联关系和分数对称；短释义反向通过时，结果会比原来的单向规则多。
 
 接口文档：http://127.0.0.1:8000/docs 。前端运行 `npm run dev`，访问 http://localhost:5173/。Vite 将 /atlas-api/* 转发到 Python 的 /api/*。
 
@@ -87,7 +104,7 @@ docker exec elasticsearch-local /usr/share/elasticsearch/bin/elasticsearch-plugi
 | GET /api/features/resolve?osm=node%2F244081381 | 按 OSM 身份精确关联地点 |
 | GET /api/features/{feature_id} | 单个地点及字面含义 |
 | GET /api/features/{feature_id}/related | 相同 meaning_id 的其他地点 |
-| GET /api/features/{feature_id}/similar?lang=zh | 用已收录的五语释义检索所有地点类型；同一候选释义至少两语支持才返回。lang 表示界面语言，score 为支持语言数 |
+| GET /api/features/{feature_id}/similar?lang=zh | 五语释义粗筛、双向细筛；同一对释义任一方向至少两语支持才返回。lang 表示界面语言，score 为两方向票数的最大值 |
 | GET /api/features/{feature_id}/vector-similar?lang=zh&min_similarity=0.60 | 仅比较当前语言的释义向量，返回所有达到原始余弦门槛的地点；score 为余弦值，包含源与命中释义序号 |
 | GET /api/search?query=新城 | 地名与含义搜索 |
 | POST /api/search | 相同能力，JSON 请求体 |
@@ -120,7 +137,7 @@ $env:RUN_ES_TESTS='1'
 backend\.venv\Scripts\python.exe -m pytest backend/tests -q
 ```
 
-集成测试使用随机 literal-name-map-test-* 索引，结束时只清理该测试索引，覆盖地点结构、OSM 精确关联及冲突处理、多语言、无释义地点、重复导入、同义边界、分页及错误处理。
+集成测试使用随机 literal-name-map-test-* 索引，结束时只清理该测试索引，覆盖地点结构、OSM 精确关联及冲突处理、多语言、无释义地点、重复导入、同义边界、分页及错误处理。关联测试检查反向独有候选的召回、双向分数、方向和多义不拼票，以及旧文档补建索引后释义与向量保持不变。
 
 ## 底图地名关联
 

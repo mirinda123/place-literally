@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from backend.config import ROOT, Settings, connect
-from backend.indexing import EMBEDDING_FIELD, EMBEDDING_LANGUAGES, documents, import_seed, index_mapping, index_settings
+from backend.indexing import EMBEDDING_FIELD, EMBEDDING_LANGUAGES, documents, ensure_similarity_fields, import_seed, index_mapping, index_settings
 from backend.main import create_app
 from backend.similar import similar_places
 from backend.vector_similar import vector_similar_places
@@ -283,9 +283,11 @@ def test_new_language_and_unknown_meanings(live):
         import_seed(client,settings,[feature])
         assert ids(search(api,"Rivière exemple"))=={"test-river"}
         assert api.get("/api/features/test-river/related").json()["results"]==[]
-        feature.update(literal_name={"text":"Exemple","lang":"fr"},literal_meanings=[{"translations":{"fr":"rivière paisible"}}])
+        feature.update(literal_name={"text":"Exemple","lang":"fr"},literal_meanings=[{
+            "translations":{"fr":"rivière paisible", "it":"collina tranquilla"}}])
         import_seed(client,settings,[feature])
         assert ids(search(api,"paisible"))=={"test-river"}
+        assert ids(search(api,"tranquilla"))=={"test-river"}
     finally:
         client.delete(index=settings.index,id=feature["feature_id"],refresh="wait_for")
 
@@ -424,6 +426,153 @@ def test_similar_requires_two_languages_in_one_interpretation(live):
             assert all_stop.status_code == 200, all_stop.text
             assert all_stop.json()["results"] == []
             assert all_stop.json()["threshold"] is None
+    finally:
+        client.indices.delete(index=isolated.index, ignore_unavailable=True)
+
+
+def test_similar_coarse_recall_and_fine_reciprocal_match(live):
+    _, client, settings = live
+    base = {"kind": "city", "names": {"en": "Test place"}, "location": {"lon": 0, "lat": 0},
+            "literal_name": {"text": "Test place", "lang": "en"}, "meaning_id": None}
+
+    def meaning(en, fr):
+        return {"translations": {"en": en, "fr": fr}}
+
+    short = meaning("violet harbor", "port violet")
+    long = meaning("violet harbor copper moon valley", "port violet cuivre lune vallée")
+    weak = meaning("violet forest", "forêt violet")
+    docs = [{**base, "feature_id": "reverse-short", "literal_meanings": [short]},
+            {**base, "feature_id": "reverse-long", "literal_meanings": [long]},
+            {**base, "feature_id": "coarse-weak", "literal_meanings": [weak]},
+            {**base, "feature_id": "reverse-second-sense", "literal_meanings": [weak, short]}]
+
+    class RecordingClient:
+        def __init__(self):
+            self.recalled = set()
+
+        def __getattr__(self, name):
+            return getattr(client, name)
+
+        def search(self, **options):
+            result = client.search(**options)
+            self.recalled.update(hit["_source"]["feature_id"] for hit in result["hits"]["hits"])
+            return result
+
+    try:
+        import_seed(client, settings, docs)
+        wrapper = RecordingClient()
+        # The long meaning needs three words, so the short meaning used to be
+        # absent in this direction. Coarse recall now retrieves it, even after
+        # a page containing only the weak candidate rejected by fine filtering.
+        forward = similar_places(wrapper, settings.index, docs[1], "en", page_size=1)
+        found = {item["feature"]["feature_id"]: item for item in forward["results"]}
+        assert "coarse-weak" in wrapper.recalled
+        assert "coarse-weak" not in found
+        assert found["reverse-short"]["score"] == 2
+        assert found["reverse-second-sense"]["matched_meaning_index"] == 1
+        backward = similar_places(client, settings.index, docs[0], "en")
+        opposite = next(item for item in backward["results"] if item["feature"]["feature_id"] == "reverse-long")
+        assert opposite["score"] == found["reverse-short"]["score"]
+        assert opposite["source_meaning_index"] == found["reverse-short"]["matched_meaning_index"]
+        assert opposite["matched_meaning_index"] == found["reverse-short"]["source_meaning_index"]
+    finally:
+        for feature in docs:
+            client.delete(index=settings.index, id=feature["feature_id"], refresh="wait_for")
+
+
+def test_similarity_fields_backfill_preserves_meanings_and_vectors(live):
+    _, client, settings = live
+    isolated = replace(settings, index="literal-name-map-test-backfill-" + uuid.uuid4().hex)
+    mapping = index_mapping(settings.analyzer)
+    del mapping["_meta"]["similar_terms_version"]
+    fields = mapping["properties"]["literal_meanings"]["properties"]["translations"]["properties"]
+    for field in fields.values():
+        del field["fields"]["similar"]
+    vector = [0.8, 0.6] + [0.0] * 510
+    doc = {"feature_id": "backfill-origin", "kind": "city", "names": {"en": "Origin"},
+           "location": {"lon": 0, "lat": 0}, "literal_name": {"text": "Origin", "lang": "en"},
+           "literal_meanings": [{"translations": {"en": "violet harbor", "fr": "port violet"},
+                                 EMBEDDING_FIELD: {"en": vector}}]}
+    other = {**doc, "feature_id": "backfill-match"}
+    try:
+        client.indices.create(index=isolated.index, mappings=mapping, settings=index_settings())
+        for feature in (doc, other):
+            client.index(index=isolated.index, id=feature["feature_id"], document=feature, refresh=True)
+        before = client.get(index=isolated.index, id=doc["feature_id"], source_exclude_vectors=False)["_source"]
+        with TestClient(create_app(isolated)) as api:
+            assert api.get("/api/features/backfill-origin/similar").status_code == 503
+            report = ensure_similarity_fields(client, isolated.index)
+            assert report["updated"] == 2
+            response = api.get("/api/features/backfill-origin/similar")
+            assert response.status_code == 200, response.text
+            assert response.json()["results"][0]["feature"]["feature_id"] == "backfill-match"
+        after = client.get(index=isolated.index, id=doc["feature_id"], source_exclude_vectors=False)["_source"]
+        assert before == after
+        assert client.count(index=isolated.index)["count"] == 2
+        assert ensure_similarity_fields(client, isolated.index)["action"] == "already_configured"
+    finally:
+        client.indices.delete(index=isolated.index, ignore_unavailable=True)
+
+
+def test_similar_weak_phrases_keep_short_meanings_without_preposition_links(live):
+    _, client, settings = live
+    isolated = replace(settings, index="literal-name-map-test-phrases-" + uuid.uuid4().hex)
+    base = {"kind": "city", "names": {"en": "Test place"}, "location": {"lon": 0, "lat": 0},
+            "literal_name": {"text": "Test place", "lang": "en"}, "meaning_id": None}
+    city = {"translations": {"en": "In the City", "fr": "Dans la Ville", "es": "En la Ciudad",
+                             "zh": "在城里", "ja": "都の中で"}}
+    upper_city = {"translations": {lang: text.upper() for lang, text in city["translations"].items()}}
+    marsh = {"translations": {"en": "Shelter in the marshes", "fr": "Abri dans les marais",
+                              "es": "Refugio en las marismas", "zh": "沼泽中的庇护所", "ja": "湿地の中の避難所"}}
+    water = {"translations": {"en": "City of water", "fr": "Ville de l’eau", "es": "Ciudad del agua",
+                              "zh": "水之城", "ja": "水の街"}}
+    country = {"translations": {"en": "In the Country", "fr": "Dans le Pays", "es": "En el País"}}
+    plain_country = {"translations": {"en": "IN THE COUNTRY", "fr": "DANS LE PAYS", "es": "EN EL PAIS"}}
+    mixed = {"translations": {"en": "In the City", "fr": "pic blanc"}}
+    mixed_long = {"translations": {"en": "IN THE CITY", "fr": "pic blanc vallée fleuve forêt"}}
+    docs = [
+        {**base, "feature_id": "phrase-city", "literal_meanings": [city]},
+        {**base, "feature_id": "phrase-equal", "literal_meanings": [marsh, upper_city]},
+        {**base, "feature_id": "phrase-marsh", "literal_meanings": [marsh]},
+        {**base, "feature_id": "phrase-water", "literal_meanings": [water]},
+        {**base, "feature_id": "phrase-country", "literal_meanings": [country]},
+        {**base, "feature_id": "phrase-country-plain", "literal_meanings": [plain_country]},
+        {**base, "feature_id": "phrase-single", "literal_meanings": [{"translations": {"en": "In the City"}}]},
+        {**base, "feature_id": "phrase-split", "literal_meanings": [
+            {"translations": {"en": "In the City"}}, {"translations": {"fr": "Dans la Ville"}}]},
+        {**base, "feature_id": "phrase-mixed", "literal_meanings": [mixed]},
+        {**base, "feature_id": "phrase-mixed-long", "literal_meanings": [mixed_long]},
+    ]
+    try:
+        import_seed(client, isolated, docs)
+        with TestClient(create_app(isolated)) as api:
+            response = api.get("/api/features/phrase-city/similar", params={"lang": "zh"})
+            assert response.status_code == 200, response.text
+            found = {item["feature"]["feature_id"]: item for item in response.json()["results"]}
+            assert set(found) == {"phrase-equal"}
+            assert found["phrase-equal"]["score"] == 5
+            assert found["phrase-equal"]["matched_meaning_index"] == 1
+            reverse = api.get("/api/features/phrase-equal/similar").json()
+            opposite = next(item for item in reverse["results"] if item["feature"]["feature_id"] == "phrase-city")
+            assert opposite["score"] == 5
+            assert opposite["source_meaning_index"] == 1
+            assert opposite["matched_meaning_index"] == 0
+            # Real Bordeaux/Istanbul definitions must fail in both directions.
+            marsh_matches = api.get("/api/features/phrase-marsh/similar").json()
+            assert "phrase-city" not in {item["feature"]["feature_id"] for item in marsh_matches["results"]}
+            country_matches = api.get("/api/features/phrase-country/similar").json()
+            country_hit = next(item for item in country_matches["results"]
+                               if item["feature"]["feature_id"] == "phrase-country-plain")
+            assert country_hit["score"] == 3
+            # Coarse recall must also support one exact phrase plus one content
+            # match. Phrase and lexical votes still refer to the same sense.
+            for source, target in (("phrase-mixed", "phrase-mixed-long"), ("phrase-mixed-long", "phrase-mixed")):
+                matches = api.get(f"/api/features/{source}/similar").json()
+                hit = next(item for item in matches["results"] if item["feature"]["feature_id"] == target)
+                assert hit["score"] == 2
+            # Force pagination through exact-phrase candidates as well.
+            paged = similar_places(client, isolated.index, docs[0], "en", page_size=1)
+            assert [item["feature"]["feature_id"] for item in paged["results"]] == ["phrase-equal"]
     finally:
         client.indices.delete(index=isolated.index, ignore_unavailable=True)
 
@@ -585,11 +734,17 @@ def test_similar_riverside_words_do_not_link_manchester_to_london(live):
     docs = [manchester, london, minsk, same_meaning]
     try:
         import_seed(client, settings, docs)
-        results = {item["feature"]["feature_id"] for item in similar_places(
+        results = {item["feature"]["feature_id"]: item for item in similar_places(
             client, settings.index, manchester, "zh")["results"]}
         assert london["feature_id"] not in results
-        assert minsk["feature_id"] not in results
         assert same_meaning["feature_id"] in results
+        # Minsk→Manchester passes in Japanese and French (2 shared / 4 words).
+        # Manchester→Minsk alone fails (2 shared / 6 words), but the new OR rule
+        # accepts the pair in both directions without weakening the London check.
+        assert results[minsk["feature_id"]]["score"] == 2
+        reverse = {item["feature"]["feature_id"]: item for item in similar_places(
+            client, settings.index, minsk, "en")["results"]}
+        assert reverse[manchester["feature_id"]]["score"] == results[minsk["feature_id"]]["score"]
         for language, word in (("zh", "河流"), ("en", "river"), ("ja", "川"),
                                ("fr", "rivière"), ("es", "río")):
             tokens = {item["token"] for item in client.indices.analyze(

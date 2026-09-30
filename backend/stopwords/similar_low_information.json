@@ -1,0 +1,7 @@
+{
+  "zh": ["的", "之", "在", "于", "於", "中", "里", "内", "城", "城里", "城内", "城市", "城镇", "国", "國", "国家", "国度", "之国", "土地", "之地", "地方"],
+  "en": ["a", "an", "the", "of", "in", "at", "on", "to", "from", "into", "with", "within", "and", "by", "besid", "near", "citi", "city", "countri", "country", "land", "place", "town", "villag", "settlement"],
+  "ja": ["の", "に", "で", "中", "内", "都", "国", "國", "都市", "街", "土地", "場所", "町", "市", "村", "所"],
+  "fr": ["de", "du", "des", "le", "la", "les", "au", "aux", "dans", "en", "à", "a", "sur", "sous", "avec", "pour", "par", "et", "d", "l", "un", "une", "pays", "ville", "villes", "terre", "lieu", "village"],
+  "es": ["de", "del", "el", "la", "los", "las", "al", "junto", "en", "a", "con", "por", "para", "un", "una", "y", "país", "pais", "países", "ciudad", "ciudades", "tierra", "lugar", "poblado", "pueblo"]
+}

@@ -11,7 +11,7 @@ from .config import Settings, connect
 from .feedback import FeedbackRequest, build_feedback_document, save_feedback
 from .indexing import PUBLIC_SOURCE_EXCLUDES
 from .search import SearchRequest, run_search
-from .similar import SimilarLanguage, similar_places
+from .similar import LexicalTermCache, SimilarityIndexNotReady, SimilarLanguage, similar_places
 from .vector_similar import vector_similar_places
 
 
@@ -21,9 +21,11 @@ def create_app(settings: Settings | None = None):
     @asynccontextmanager
     async def lifespan(app):
         app.state.es = connect(settings)
+        app.state.lexical_terms = LexicalTermCache(app.state.es, settings.index)
         try:
             yield
         finally:
+            app.state.lexical_terms.clear()
             app.state.es.close()
 
     app = FastAPI(title="Place, Literally API", version="0.2.0", lifespan=lifespan,
@@ -143,7 +145,12 @@ def create_app(settings: Settings | None = None):
                 lang: SimilarLanguage = Query("zh")):
         client = request.app.state.es
         origin = get_feature(client, feature_id)
-        return similar_places(client, settings.index, origin, lang)
+        try:
+            return similar_places(client, settings.index, origin, lang,
+                                 analyze_terms=request.app.state.lexical_terms.terms,
+                                 normalize_phrase=request.app.state.lexical_terms.phrase)
+        except SimilarityIndexNotReady as exc:
+            raise HTTPException(503, "关联分词索引未就绪，请运行 python -m backend.configure_similarity_fields。") from exc
 
     @app.get("/api/features/{feature_id}/vector-similar")
     def vector_similar(request: Request, feature_id: str,
