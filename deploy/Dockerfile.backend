@@ -5,7 +5,8 @@ RUN pip install --no-cache-dir -r backend/requirements.txt \
     && useradd --create-home --uid 10001 app
 COPY backend ./backend
 COPY data/meaning-groups.json ./data/meaning-groups.json
-RUN mkdir -p /app/work \
+RUN chmod -R a+rX /app/backend /app/data \
+    && mkdir -p /app/work \
     && chown -R app:app /app/work
 USER app
 EXPOSE 8000
