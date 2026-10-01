@@ -9,7 +9,7 @@ from dataclasses import replace
 import pytest
 
 from backend.config import Settings, connect
-from backend.indexing import documents, import_seed
+from backend.indexing import EMBEDDING_FIELD, documents, import_seed
 from backend.translate_meanings import (apply_result, cache_key, call_codex, merge_result,
     needs_work, output_schema, parse_languages, payload_for, validate_result)
 
@@ -45,6 +45,36 @@ def test_completed_places_need_explicit_review_existing(doc):
     assert not needs_work(doc, ["en"])
     assert needs_work(doc, ["en"], review_existing=True)
     assert needs_work(doc, ["zh", "en"])
+
+
+def test_drafts_include_geographic_identity_and_reject_changed_location(doc):
+    payload = payload_for(doc, ["en"])
+    assert payload["location"] == doc["location"]
+    assert payload["external_ids"] == {"osm": ["node/123"]}
+    moved = copy.deepcopy(doc)
+    moved["location"]["lon"] += 1
+    with pytest.raises(ValueError, match="changed"):
+        merge_result(moved, payload, ready(payload))
+
+
+def test_draft_input_omits_vectors_and_vector_updates_do_not_stale_the_draft(doc):
+    doc["literal_meanings"][0][EMBEDDING_FIELD] = {"en": [0.1] * 512}
+    payload = payload_for(doc, ["en"])
+    assert payload["literal_meanings"] == [{"translations": {"en": "central country"}}]
+    doc["literal_meanings"][0][EMBEDDING_FIELD]["en"] = [0.2] * 512
+    assert merge_result(doc, payload, ready(payload)) is not None
+
+
+def test_primary_spelling_can_use_its_attested_language_despite_a_longer_alias(doc):
+    doc["literal_name"] = None
+    doc["names"] = {"und": "St. Gallen", "de": "Sankt Gallen", "fr": "Saint-Gall"}
+    payload = payload_for(doc, ["en"])
+    result = ready(payload)
+    result["literal_name"] = {"text": "St. Gallen", "lang": "de"}
+    assert validate_result(result, payload) is result
+    result["literal_name"] = {"text": "Saint-Gall", "lang": "de"}
+    with pytest.raises(ValueError, match="spelling and language"):
+        validate_result(result, payload)
 
 
 @pytest.mark.parametrize("change", ["identity", "language", "source", "empty", "long", "paragraph", "filler", "extra", "status"])

@@ -56,8 +56,10 @@ def payload_for(doc, languages):
                           for lang in meaning["translations"]]
     target_languages = list(dict.fromkeys([*languages, *existing_languages]))
     return {"feature_id": doc["feature_id"], "kind": doc["kind"], "names": doc["names"],
+            "location": doc.get("location"), "external_ids": doc.get("external_ids", {}),
             "literal_name": doc.get("literal_name"),
-            "literal_meanings": doc.get("literal_meanings", []),
+            "literal_meanings": [{"translations": meaning["translations"]}
+                                 for meaning in doc.get("literal_meanings", [])],
             "target_languages": target_languages}
 
 
@@ -105,7 +107,8 @@ def validate_result(result, payload):
             if name != payload["literal_name"]:
                 raise ValueError("Must preserve the existing original name")
         elif (name["text"] not in payload["names"].values() or name["lang"] == "und"
-              or (name["lang"] in payload["names"] and payload["names"][name["lang"]] != name["text"])):
+              or (name["lang"] in payload["names"]
+                  and name["text"] not in {payload["names"][name["lang"]], payload["names"].get("und")})):
             raise ValueError("Original name must match a supplied spelling and language")
         for meaning in meanings:
             if not isinstance(meaning, dict) or set(meaning) != {"translations"}:
@@ -193,7 +196,7 @@ def merge_result(doc, payload, result):
 
 
 def apply_result(client, settings, hit_id, payload, result, backup_dir):
-    fresh = client.get(index=settings.index, id=hit_id)
+    fresh = client.get(index=settings.index, id=hit_id, source_exclude_vectors=False)
     patch = merge_result(fresh["_source"], payload, result)
     if patch is None:
         return
